@@ -65,12 +65,6 @@ Stay tuned as we build out:
 - CI integration
 - Dashboard & analytics
 
-## 💬 Want to Contribute or Follow Along?
-
-- ⭐ Star this repo to show support  
-- 🐛 File issues or feature ideas  
-- 🤝 PRs welcome — see `CONTRIBUTING.md` (coming soon)  
-
 ## 📄 License
 
 MIT
