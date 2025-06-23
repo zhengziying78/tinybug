@@ -6,7 +6,7 @@
 
 ## 🧠 What is tinybug?
 
-**tinybug** is a platform for **mutation testing** — a technique to **measure how effective your tests really are** at catching bugs.
+**[tinybug.ai](https://tinybug.ai/)** is a platform for **mutation testing** — a technique to **measure how effective your tests really are** at catching bugs.
 
 Modern development teams often focus on code coverage, but **code coverage ≠ bug detection**. Tests might run the code, but do they actually validate the behavior? Many tests pass even when the code they're covering is broken — due to poor assertions, missing checks, or lack of scenario diversity.
 
