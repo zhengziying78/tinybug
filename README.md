@@ -28,6 +28,7 @@ More on mutation testing:
 - [Google’s Mutation Testing at Scale (2017)](https://research.google/pubs/state-of-mutation-testing-at-google/)
 - [PIT (for Java)](https://pitest.org/)
 - [Stryker (for JS, TS, and more)](https://stryker-mutator.io/docs/)
+- [Awesome Mutation testing](https://github.com/theofidry/awesome-mutation-testing)
 
 ## 🤖 Why Now?
 
