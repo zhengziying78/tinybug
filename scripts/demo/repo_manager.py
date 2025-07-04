@@ -9,7 +9,7 @@ from typing import Optional
 
 
 class RepoManager:
-    def __init__(self, base_dir: str = "~/Repo"):
+    def __init__(self, base_dir: str = "~/Repos"):
         self.base_dir = Path(base_dir).expanduser()
         self.base_dir.mkdir(parents=True, exist_ok=True)
     
@@ -39,6 +39,15 @@ class RepoManager:
     
     def create_branch(self, repo_path: Path, branch_name: str) -> None:
         """Create and checkout a new branch in the repository."""
+        # First, try to delete the branch if it exists locally
+        try:
+            subprocess.run([
+                "git", "branch", "-D", branch_name
+            ], cwd=repo_path, check=False)
+        except subprocess.CalledProcessError:
+            pass  # Branch doesn't exist locally, that's fine
+        
+        # Create and checkout the new branch
         subprocess.run([
             "git", "checkout", "-b", branch_name
         ], cwd=repo_path, check=True)
@@ -55,6 +64,15 @@ class RepoManager:
     
     def push_branch(self, repo_path: Path, branch_name: str) -> None:
         """Push the branch to origin."""
+        # First, try to delete the remote branch if it exists
+        try:
+            subprocess.run([
+                "git", "push", "origin", "--delete", branch_name
+            ], cwd=repo_path, check=False, capture_output=True)
+        except subprocess.CalledProcessError:
+            pass  # Branch doesn't exist on remote, that's fine
+        
+        # Push the branch to origin
         subprocess.run([
             "git", "push", "-u", "origin", branch_name
         ], cwd=repo_path, check=True)
