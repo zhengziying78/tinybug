@@ -3,8 +3,8 @@ Cleanup functionality for mutation testing PoC.
 """
 from pathlib import Path
 from typing import List, Dict, Any
-from .repo_manager import RepoManager
-from .pr_manager import PRManager
+from repo_manager import RepoManager
+from pr_manager import PRManager
 
 
 class CleanupManager:
