@@ -11,7 +11,7 @@ class PRManager:
     def __init__(self, repo_path: Path):
         self.repo_path = repo_path
     
-    def create_pull_request(self, title: str, body: str, base_branch: str = "main") -> Dict[str, Any]:
+    def create_pull_request(self, title: str, body: str, base_branch: str = "main", repo: str = None) -> Dict[str, Any]:
         """Create a pull request using GitHub CLI."""
         cmd = [
             "gh", "pr", "create",
@@ -19,6 +19,10 @@ class PRManager:
             "--body", body,
             "--base", base_branch
         ]
+        
+        # If repo is specified, add it to target the correct repository
+        if repo:
+            cmd.extend(["--repo", repo])
         
         result = subprocess.run(cmd, cwd=self.repo_path, capture_output=True, text=True, check=True)
         pr_url = result.stdout.strip()

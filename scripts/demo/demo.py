@@ -5,6 +5,7 @@ Usage: python demo.py
 """
 import json
 from pathlib import Path
+from datetime import datetime
 from repo_manager import RepoManager
 from mutator import Mutator, MutationSpec
 from pr_manager import PRManager
@@ -20,7 +21,7 @@ MUTATION_CONFIG = {
     "find_pattern": r"if value is None:",
     "replace_pattern": "if not value is None:"
 }
-BRANCH_NAME = "mutation-test-demo"
+BRANCH_NAME = f"mutation-test-demo-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
 PR_TITLE = "Mutation Test: Change None check logic"
 PR_BODY = """
 This PR contains a mutation for testing purposes.
@@ -80,7 +81,7 @@ def main():
         # Step 5: Create pull request
         print("Creating pull request...")
         pr_manager = PRManager(repo_path)
-        pr_info = pr_manager.create_pull_request(PR_TITLE, PR_BODY)
+        pr_info = pr_manager.create_pull_request(PR_TITLE, PR_BODY, base_branch="master", repo="zhengziying78/demo-httpie-cli")
         pr_number = pr_info["number"]
         print(f"Pull request created: {pr_info['url']}")
         
