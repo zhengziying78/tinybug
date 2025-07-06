@@ -1,9 +1,11 @@
 """
 Main entry point for mutation testing PoC demo.
 
-Usage: python demo.py
+Usage: python demo.py [repo_name]
+  repo_name: demo-httpie-cli, demo-pallets-click, or demo-psf-requests
 """
 import json
+import sys
 from pathlib import Path
 from datetime import datetime
 from repo_manager import RepoManager
@@ -119,13 +121,40 @@ def select_repo_with_timeout():
     return selected_repo
 
 
+def get_repo_by_name(repo_name):
+    """Get repository configuration by name."""
+    # Map repo names to their keys
+    repo_name_to_key = {
+        "demo-httpie-cli": "1",
+        "demo-pallets-click": "2", 
+        "demo-psf-requests": "3"
+    }
+    
+    if repo_name in repo_name_to_key:
+        key = repo_name_to_key[repo_name]
+        return REPO_OPTIONS[key]
+    else:
+        return None
+
+
 def main():
     """Main function to run the mutation testing demo."""
     print("Starting mutation testing PoC demo...")
     print()
     
     # Step 0: Select repository
-    selected_repo = select_repo_with_timeout()
+    if len(sys.argv) > 1:
+        repo_name = sys.argv[1]
+        selected_repo = get_repo_by_name(repo_name)
+        if selected_repo:
+            print(f"Using repository from command line: {selected_repo['name']}")
+        else:
+            print(f"Error: Unknown repository name '{repo_name}'")
+            print("Available repositories: demo-httpie-cli, demo-pallets-click, demo-psf-requests")
+            sys.exit(1)
+    else:
+        selected_repo = select_repo_with_timeout()
+    
     mutation_config = selected_repo["mutation"]
     
     # Generate timestamp and create dynamic names
