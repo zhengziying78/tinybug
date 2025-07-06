@@ -24,7 +24,7 @@ REPO_OPTIONS = {
             "file_path": "httpie/cli/dicts.py",
             "line_number": 26,
             "find_pattern": r"if value is None:",
-            "replace_pattern": "if not value is None:",
+            "replace_pattern": "if value is not None:",
             "description": "Change None check logic"
         }
     },
