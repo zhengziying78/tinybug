@@ -61,10 +61,8 @@ DEFAULT_CHOICE = "1"  # demo-httpie-cli
 
 def select_repo_with_timeout():
     """Select a repository with a 10-second timeout."""
-    import select
-    import sys
     import threading
-    import time
+    from queue import Queue, Empty
     
     print("Available repositories for mutation testing:")
     print()
@@ -76,45 +74,42 @@ def select_repo_with_timeout():
     
     print(f"Enter your choice (1-{len(REPO_OPTIONS)}) or wait 10 seconds for default (demo-httpie-cli):")
     
-    # Countdown timer
-    choice = None
-    countdown_active = True
+    # Use a queue to communicate between threads
+    input_queue = Queue()
     
-    def countdown():
-        nonlocal countdown_active
-        for i in range(10, 0, -1):
-            if not countdown_active:
-                return
-            print(f"\rDefaulting to demo-httpie-cli in {i} seconds... ", end='', flush=True)
-            time.sleep(1)
-        if countdown_active:
-            print(f"\rTime's up! Using default: demo-httpie-cli                ")
-    
-    # Start countdown in background
-    countdown_thread = threading.Thread(target=countdown)
-    countdown_thread.daemon = True
-    countdown_thread.start()
-    
-    # Wait for input
-    try:
-        if sys.stdin.isatty():
-            # Interactive terminal
+    def get_input():
+        try:
             user_input = input().strip()
-        else:
-            # Non-interactive (CI/automated)
-            user_input = ""
+            input_queue.put(user_input)
+        except (KeyboardInterrupt, EOFError):
+            input_queue.put(None)
+    
+    # Start input thread
+    input_thread = threading.Thread(target=get_input)
+    input_thread.daemon = True
+    input_thread.start()
+    
+    # Countdown with input checking
+    choice = None
+    for i in range(10, 0, -1):
+        print(f"\rDefaulting to demo-httpie-cli in {i} seconds... ", end='', flush=True)
         
-        countdown_active = False
-        
-        if user_input and user_input in REPO_OPTIONS:
-            choice = user_input
-        else:
-            choice = DEFAULT_CHOICE
-            
-    except (KeyboardInterrupt, EOFError):
-        countdown_active = False
+        # Check for input
+        try:
+            user_input = input_queue.get(timeout=1)
+            print(f"\rUser input received: {user_input}                    ")
+            if user_input and user_input in REPO_OPTIONS:
+                choice = user_input
+            else:
+                choice = DEFAULT_CHOICE
+            break
+        except Empty:
+            continue
+    
+    # If no input received, use default
+    if choice is None:
+        print(f"\rTime's up! Using default: demo-httpie-cli                ")
         choice = DEFAULT_CHOICE
-        print(f"\nUsing default: demo-httpie-cli")
     
     selected_repo = REPO_OPTIONS[choice]
     print(f"\nSelected: {selected_repo['name']}")
