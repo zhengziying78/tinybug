@@ -33,23 +33,30 @@ class TestAnalyzer:
         
         # Process individual checks
         checks = pr_data.get('checks', [])
-        for check in checks:
-            check_info = {
-                'name': check.get('name'),
-                'status': check.get('status'),
-                'conclusion': check.get('conclusion'),
-                'url': check.get('url'),
-                'started_at': check.get('started_at'),
-                'completed_at': check.get('completed_at')
-            }
-            analysis['checks'].append(check_info)
-            
-            # Extract test failures if this is a test check
-            if check.get('conclusion') == 'failure' and self._is_test_check(check):
-                analysis['test_failures'].append({
-                    'check_name': check.get('name'),
-                    'details': check.get('details', 'No details available')
-                })
+        
+        try:
+            for check in checks:
+                if isinstance(check, dict):
+                    check_info = {
+                        'name': check.get('name'),
+                        'status': check.get('status'),
+                        'conclusion': check.get('conclusion'),
+                        'url': check.get('url'),
+                        'started_at': check.get('started_at'),
+                        'completed_at': check.get('completed_at')
+                    }
+                    analysis['checks'].append(check_info)
+                    
+                    # Extract test failures if this is a test check
+                    if check.get('conclusion') == 'failure' and self._is_test_check(check):
+                        analysis['test_failures'].append({
+                            'check_name': check.get('name'),
+                            'details': check.get('details', 'No details available')
+                        })
+        except Exception as e:
+            import traceback
+            print(f"ERROR: Exception in checks processing: {e}")
+            traceback.print_exc()
         
         # Generate summary
         analysis['summary'] = self._generate_summary(analysis)
@@ -58,6 +65,8 @@ class TestAnalyzer:
     
     def _is_test_check(self, check: Dict[str, Any]) -> bool:
         """Determine if a check is a test-related check."""
+        if not isinstance(check, dict):
+            return False
         test_keywords = ['test', 'pytest', 'unittest', 'ci', 'build']
         check_name = check.get('name', '').lower()
         return any(keyword in check_name for keyword in test_keywords)
