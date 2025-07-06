@@ -110,6 +110,56 @@ class PRManager:
                     time.sleep(15)
                     continue
                 
+                # Analyze individual checks first to determine completion
+                checks_completed = False
+                try:
+                    if checks and isinstance(checks, list) and len(checks) > 0:
+                        total_checks = len(checks)
+                        # Use 'bucket' field: pass, fail, pending, skipping, cancel
+                        completed_checks = sum(1 for check in checks if isinstance(check, dict) and check.get('bucket') in ['pass', 'fail', 'cancel', 'skipping'])
+                        running_checks = sum(1 for check in checks if isinstance(check, dict) and check.get('bucket') in ['pending'])
+                        passed_checks = sum(1 for check in checks if isinstance(check, dict) and check.get('bucket') == 'pass')
+                        failed_checks = sum(1 for check in checks if isinstance(check, dict) and check.get('bucket') == 'fail')
+                        
+                        print(f"🔍 Checks summary: {total_checks} total, {completed_checks} completed, {running_checks} running")
+                        print(f"   ✅ Passed: {passed_checks}, ❌ Failed: {failed_checks}")
+                        
+                        # Show individual check details (limit to first 10 to avoid spam)
+                        checks_to_show = checks[:10]
+                        for check in checks_to_show:
+                            if isinstance(check, dict):
+                                check_name = check.get('name', 'Unknown')
+                                check_state = check.get('state', 'unknown')
+                                check_bucket = check.get('bucket', '')
+                                if check_bucket:
+                                    print(f"   • {check_name}: {check_state} ({check_bucket})")
+                                else:
+                                    print(f"   • {check_name}: {check_state}")
+                            else:
+                                print(f"   • Invalid check data: {check}")
+                        
+                        if len(checks) > 10:
+                            print(f"   ... and {len(checks) - 10} more checks")
+                        
+                        # Check if all checks are completed (no running checks)
+                        if running_checks == 0 and completed_checks == total_checks:
+                            checks_completed = True
+                    else:
+                        print("🔍 No checks available yet - GitHub Actions may still be starting up")
+                        # If no checks are available, wait a bit longer for them to start
+                        if elapsed_time > 120:  # Wait 2 minutes to see if checks start
+                            print("🔍 No checks detected after 2 minutes - assuming no CI/CD is configured")
+                            return {
+                                'status': status,
+                                'checks': checks,
+                                'completed': True,
+                                'no_checks_configured': True
+                            }
+                except Exception as e:
+                    import traceback
+                    print(f"ERROR: Exception in individual checks analysis: {e}")
+                    traceback.print_exc()
+                
                 # Analyze rollup status
                 try:
                     if status.get('statusCheckRollup'):
@@ -151,50 +201,14 @@ class PRManager:
                     print(f"ERROR: Exception in rollup status analysis: {e}")
                     traceback.print_exc()
                 
-                # Analyze individual checks
-                try:
-                    if checks and isinstance(checks, list) and len(checks) > 0:
-                        total_checks = len(checks)
-                        # Use 'bucket' field: pass, fail, pending, skipping, cancel
-                        completed_checks = sum(1 for check in checks if isinstance(check, dict) and check.get('bucket') in ['pass', 'fail', 'cancel', 'skipping'])
-                        running_checks = sum(1 for check in checks if isinstance(check, dict) and check.get('bucket') in ['pending'])
-                        passed_checks = sum(1 for check in checks if isinstance(check, dict) and check.get('bucket') == 'pass')
-                        failed_checks = sum(1 for check in checks if isinstance(check, dict) and check.get('bucket') == 'fail')
-                        
-                        print(f"🔍 Checks summary: {total_checks} total, {completed_checks} completed, {running_checks} running")
-                        print(f"   ✅ Passed: {passed_checks}, ❌ Failed: {failed_checks}")
-                        
-                        # Show individual check details (limit to first 10 to avoid spam)
-                        checks_to_show = checks[:10]
-                        for check in checks_to_show:
-                            if isinstance(check, dict):
-                                check_name = check.get('name', 'Unknown')
-                                check_state = check.get('state', 'unknown')
-                                check_bucket = check.get('bucket', '')
-                                if check_bucket:
-                                    print(f"   • {check_name}: {check_state} ({check_bucket})")
-                                else:
-                                    print(f"   • {check_name}: {check_state}")
-                            else:
-                                print(f"   • Invalid check data: {check}")
-                        
-                        if len(checks) > 10:
-                            print(f"   ... and {len(checks) - 10} more checks")
-                    else:
-                        print("🔍 No checks available yet - GitHub Actions may still be starting up")
-                        # If no checks are available, wait a bit longer for them to start
-                        if elapsed_time > 120:  # Wait 2 minutes to see if checks start
-                            print("🔍 No checks detected after 2 minutes - assuming no CI/CD is configured")
-                            return {
-                                'status': status,
-                                'checks': checks,
-                                'completed': True,
-                                'no_checks_configured': True
-                            }
-                except Exception as e:
-                    import traceback
-                    print(f"ERROR: Exception in individual checks analysis: {e}")
-                    traceback.print_exc()
+                # If all individual checks are completed, exit even if rollup status is unclear
+                if checks_completed:
+                    print("✅ All individual checks completed - exiting wait loop")
+                    return {
+                        'status': status,
+                        'checks': checks,
+                        'completed': True
+                    }
                 
                 print()  # Add blank line for readability
                 time.sleep(15)  # Wait 15 seconds before checking again
