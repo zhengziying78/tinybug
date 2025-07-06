@@ -98,8 +98,11 @@ def select_repo_with_timeout():
         try:
             user_input = input_queue.get(timeout=1)
             print(f"\rUser input received: {user_input}                    ")
-            if user_input and user_input in REPO_OPTIONS:
+            if user_input in REPO_OPTIONS:
                 choice = user_input
+            elif user_input == "":
+                # Empty input (Enter pressed) means use default
+                choice = DEFAULT_CHOICE
             else:
                 choice = DEFAULT_CHOICE
             break
@@ -204,7 +207,10 @@ This mutation tests whether the test suite can detect the change in {mutation_co
         print(f"  - Mutation survived: {analysis['summary']['mutation_survived']}")
         
     except Exception as e:
+        import traceback
         print(f"Error during execution: {str(e)}")
+        print("Full traceback:")
+        traceback.print_exc()
         
     finally:
         # Step 8: Cleanup
