@@ -79,9 +79,14 @@ class PRManager:
             print(f"DEBUG: stdout: {e.stdout}")
             raise  # Re-raise for other errors
     
-    def close_pull_request(self, pr_number: str) -> None:
+    def close_pull_request(self, pr_number: str, repo: str = None) -> None:
         """Close a pull request without merging."""
         cmd = ["gh", "pr", "close", pr_number]
+        
+        # Add repo parameter if specified
+        if repo:
+            cmd.extend(["--repo", repo])
+        
         subprocess.run(cmd, cwd=self.repo_path, check=True)
     
     def wait_for_checks(self, pr_number: str, timeout_seconds: int = 300, repo: str = None) -> Dict[str, Any]:

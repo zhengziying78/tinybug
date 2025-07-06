@@ -210,7 +210,7 @@ This mutation tests whether the test suite can detect the change in {mutation_co
         # Step 8: Cleanup
         print("Cleaning up...")
         if repo_path and pr_number:
-            cleanup_results = cleanup_manager.cleanup_pr_and_repo(repo_path, pr_number)
+            cleanup_results = cleanup_manager.cleanup_pr_and_repo(repo_path, pr_number, selected_repo['repo_id'])
             print(f"Cleanup results: {cleanup_results}")
         elif repo_path:
             # Clean up repo even if PR wasn't created
