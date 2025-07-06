@@ -11,7 +11,7 @@ class CleanupManager:
     def __init__(self):
         self.repo_manager = RepoManager()
     
-    def cleanup_pr_and_repo(self, repo_path: Path, pr_number: str) -> Dict[str, Any]:
+    def cleanup_pr_and_repo(self, repo_path: Path, pr_number: str, repo_id: str = None) -> Dict[str, Any]:
         """Clean up pull request and local repository."""
         cleanup_results = {
             'pr_closed': False,
@@ -22,7 +22,7 @@ class CleanupManager:
         try:
             # Close the pull request
             pr_manager = PRManager(repo_path)
-            pr_manager.close_pull_request(pr_number)
+            pr_manager.close_pull_request(pr_number, repo_id)
             cleanup_results['pr_closed'] = True
         except Exception as e:
             cleanup_results['errors'].append(f"Failed to close PR: {str(e)}")
