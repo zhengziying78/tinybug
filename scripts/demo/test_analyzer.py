@@ -29,7 +29,15 @@ class TestAnalyzer:
         # Extract overall status
         status = pr_data.get('status', {})
         if status.get('statusCheckRollup'):
-            analysis['overall_status'] = status['statusCheckRollup'].get('state')
+            rollup = status['statusCheckRollup']
+            # Handle case where rollup is a dict
+            if isinstance(rollup, dict):
+                analysis['overall_status'] = rollup.get('state')
+            # Handle case where rollup is a list (unexpected but happens)
+            elif isinstance(rollup, list) and len(rollup) > 0 and isinstance(rollup[0], dict):
+                analysis['overall_status'] = rollup[0].get('state')
+            else:
+                analysis['overall_status'] = 'UNKNOWN'
         
         # Process individual checks
         checks = pr_data.get('checks', [])
