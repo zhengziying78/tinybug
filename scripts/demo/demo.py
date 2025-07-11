@@ -174,8 +174,8 @@ This mutation tests whether the test suite can detect the change in {mutation_co
     
     # Initialize managers
     repo_manager = RepoManager()
-    test_analyzer = TestAnalyzer()
     cleanup_manager = CleanupManager()
+    test_analyzer = None  # Will be initialized after repo is cloned
     
     repo_path = None
     pr_number = None
@@ -185,6 +185,9 @@ This mutation tests whether the test suite can detect the change in {mutation_co
         print(f"Cloning repository: {selected_repo['url']}")
         repo_path = repo_manager.clone_repo(selected_repo['url'])
         print(f"Repository cloned to: {repo_path}")
+        
+        # Initialize test analyzer with repo path
+        test_analyzer = TestAnalyzer(repo_path=repo_path)
         
         # Step 2: Create a branch for mutation
         print(f"Creating branch: {branch_name}")
@@ -224,7 +227,7 @@ This mutation tests whether the test suite can detect the change in {mutation_co
         
         # Step 7: Analyze and save results
         print("Analyzing test results...")
-        analysis = test_analyzer.analyze_pr_results(pr_results)
+        analysis = test_analyzer.analyze_pr_results(pr_results, repo=selected_repo['repo_id'])
         results_file = test_analyzer.save_results(analysis)
         
         print(f"Test results saved to: {results_file}")
@@ -234,6 +237,23 @@ This mutation tests whether the test suite can detect the change in {mutation_co
         print(f"  - Failed checks: {analysis['summary']['failed_checks']}")
         print(f"  - Mutation killed: {analysis['summary']['mutation_killed']}")
         print(f"  - Mutation survived: {analysis['summary']['mutation_survived']}")
+        
+        # Display detailed failure information
+        if analysis['test_failures']:
+            print()
+            print("Detailed failure information:")
+            for failure in analysis['test_failures']:
+                check_name = failure.get('check_name', 'Unknown')
+                failure_reason = failure.get('failure_reason', 'due to unknown reasons')
+                failed_tests = failure.get('failed_tests', [])
+                
+                print(f"  • {check_name}: {failure_reason}")
+                
+                if failed_tests:
+                    print("    Failed tests:")
+                    for test in failed_tests:
+                        print(f"      - {test}")
+                print()
         
     except Exception as e:
         import traceback

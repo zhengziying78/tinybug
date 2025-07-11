@@ -1,7 +1,10 @@
 """
 Shared utilities for processing GitHub check results.
 """
-from typing import Dict, Any, List
+import subprocess
+import json
+import re
+from typing import Dict, Any, List, Optional
 
 
 class CheckProcessor:
@@ -77,23 +80,53 @@ class CheckProcessor:
         """Determine if a check is a test-related check."""
         if not isinstance(check, dict):
             return False
+        
+        # Check both the check name and workflow name for test-related keywords
         test_keywords = ['test', 'pytest', 'unittest', 'ci', 'build']
         check_name = check.get('name', '').lower()
-        return any(keyword in check_name for keyword in test_keywords)
+        workflow_name = check.get('workflow', '').lower()
+        
+        # Check if any keyword is in the check name or workflow name
+        if any(keyword in check_name for keyword in test_keywords):
+            return True
+        if any(keyword in workflow_name for keyword in test_keywords):
+            return True
+        
+        # Also check for Python version patterns that are typically test jobs
+        # e.g., "3.8", "3.9", "3.10", "3.11", "3.12", "pypy3"
+        python_version_pattern = r'^\d+\.\d+$|^pypy\d*$'
+        import re
+        if re.match(python_version_pattern, check_name):
+            return True
+        
+        return False
     
     @staticmethod
-    def get_failed_test_checks(checks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Get all failed test checks."""
+    def get_failed_test_checks(checks: List[Dict[str, Any]], repo_path: str = None, repo: str = None) -> List[Dict[str, Any]]:
+        """Get all failed test checks with detailed failure information."""
         failed_tests = []
         
         for check in checks:
             normalized_check = CheckProcessor.normalize_check(check)
             if (normalized_check.get('bucket') == CheckProcessor.STATUS_FAIL and 
                 CheckProcessor.is_test_check(normalized_check)):
-                failed_tests.append({
+                
+                # Get basic check info
+                basic_info = {
                     'check_name': normalized_check.get('name'),
                     'details': normalized_check.get('description', 'No details available')
-                })
+                }
+                
+                # If repo_path is provided, try to get detailed failure info
+                if repo_path:
+                    try:
+                        detailed_info = CheckProcessor.get_failed_check_details(normalized_check, repo_path, repo)
+                        basic_info.update(detailed_info)
+                    except Exception as e:
+                        # If detailed extraction fails, keep basic info
+                        basic_info['failure_reason'] = 'due to unknown reasons (failed to fetch logs)'
+                
+                failed_tests.append(basic_info)
         
         return failed_tests
     
@@ -124,3 +157,117 @@ class CheckProcessor:
         
         if len(normalized_checks) > 10:
             print(f"   ... and {len(normalized_checks) - 10} more checks")
+    
+    @staticmethod
+    def extract_run_id_from_url(check_url: str) -> Optional[str]:
+        """Extract GitHub Actions run ID from check URL."""
+        if not check_url:
+            return None
+        
+        # GitHub Actions URLs typically look like:
+        # https://github.com/owner/repo/actions/runs/12345678/job/98765432
+        # https://github.com/owner/repo/runs/12345678
+        match = re.search(r'/runs/(\d+)', check_url)
+        if match:
+            return match.group(1)
+        return None
+    
+    @staticmethod
+    def get_failed_check_details(check: Dict[str, Any], repo_path: str, repo: str = None) -> Dict[str, Any]:
+        """Get detailed failure information for a failed check."""
+        check_details = {
+            'check_name': check.get('name', 'Unknown'),
+            'failure_reason': 'due to reasons other than test case failure',
+            'failed_tests': [],
+            'log_available': False
+        }
+        
+        # Extract run ID from the check URL
+        check_url = check.get('url', check.get('link', ''))
+        run_id = CheckProcessor.extract_run_id_from_url(check_url)
+        
+        if not run_id:
+            check_details['failure_reason'] = f"due to unknown reasons (no run ID found in URL: {check_url})"
+            return check_details
+        
+        try:
+            # Get the failed logs for this run
+            cmd = ["gh", "run", "view", run_id, "--log-failed"]
+            if repo:
+                cmd.extend(["--repo", repo])
+            
+            result = subprocess.run(cmd, cwd=repo_path, capture_output=True, text=True, timeout=30)
+            
+            if result.returncode == 0:
+                check_details['log_available'] = True
+                log_output = result.stdout
+                
+                # Parse the log output to extract test failures
+                failed_tests = CheckProcessor.parse_test_failures_from_log(log_output)
+                if failed_tests:
+                    check_details['failed_tests'] = failed_tests
+                    check_details['failure_reason'] = f"due to {len(failed_tests)} failed test case(s)"
+                else:
+                    # Look for other common failure patterns
+                    if "error" in log_output.lower() or "failed" in log_output.lower():
+                        check_details['failure_reason'] = "due to build or runtime errors"
+            else:
+                # If command failed, add debug info (truncate stderr to avoid too much output)
+                stderr_msg = result.stderr[:200] + "..." if len(result.stderr) > 200 else result.stderr
+                check_details['failure_reason'] = f"due to unknown reasons (failed to fetch logs: {stderr_msg})"
+                    
+        except (subprocess.TimeoutExpired, subprocess.CalledProcessError) as e:
+            # If we can't get the logs, just return the basic info
+            check_details['failure_reason'] = f"due to unknown reasons (error: {str(e)[:200]})"
+        
+        return check_details
+    
+    @staticmethod
+    def parse_test_failures_from_log(log_output: str) -> List[str]:
+        """Parse test failure information from log output."""
+        failed_tests = []
+        
+        # Look for pytest short test summary info block first (most reliable)
+        summary_match = re.search(
+            r'=+ short test summary info =+\s*\n(.*?)\n=+.*?=+', 
+            log_output, 
+            re.DOTALL | re.IGNORECASE
+        )
+        
+        if summary_match:
+            summary_block = summary_match.group(1)
+            # Extract FAILED lines from the summary
+            failed_lines = re.findall(r'FAILED\s+([^\n\r]+)', summary_block)
+            for line in failed_lines:
+                line = line.strip()
+                if line and line not in failed_tests:
+                    failed_tests.append(line)
+        
+        # If no short summary found, look for individual FAILED patterns
+        if not failed_tests:
+            # Common patterns for test failures
+            patterns = [
+                # pytest FAILED patterns
+                r'FAILED\s+([^\s]+(?:\s+-\s+[^\n\r]+)?)',
+                # unittest failures
+                r'FAIL:\s+([^\s]+)',
+                # Generic test failure patterns
+                r'test_[^\s]+\s+.*FAILED',
+                r'::test_[^\s]+\s+FAILED'
+            ]
+            
+            for pattern in patterns:
+                matches = re.findall(pattern, log_output, re.IGNORECASE | re.MULTILINE)
+                for match in matches:
+                    if isinstance(match, tuple):
+                        # If the pattern captured multiple groups, join them
+                        test_info = ' - '.join(match)
+                    else:
+                        test_info = match
+                    
+                    # Clean up the test info
+                    test_info = test_info.strip()
+                    if test_info and test_info not in failed_tests:
+                        failed_tests.append(test_info)
+        
+        return failed_tests[:10]  # Limit to first 10 failures to avoid overwhelming output

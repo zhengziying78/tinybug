@@ -9,11 +9,12 @@ from check_utils import CheckProcessor
 
 
 class TestAnalyzer:
-    def __init__(self, output_dir: Path = None):
+    def __init__(self, output_dir: Path = None, repo_path: Path = None):
         self.output_dir = output_dir or Path.home() / "Desktop"
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.repo_path = repo_path
     
-    def analyze_pr_results(self, pr_data: Dict[str, Any]) -> Dict[str, Any]:
+    def analyze_pr_results(self, pr_data: Dict[str, Any], repo: str = None) -> Dict[str, Any]:
         """Analyze PR check results and extract test information."""
         analysis = {
             'pr_number': pr_data.get('status', {}).get('number'),
@@ -50,7 +51,7 @@ class TestAnalyzer:
                 analysis['checks'].append(normalized_check)
             
             # Extract test failures using the shared utility
-            analysis['test_failures'] = CheckProcessor.get_failed_test_checks(checks)
+            analysis['test_failures'] = CheckProcessor.get_failed_test_checks(checks, str(self.repo_path) if self.repo_path else None, repo)
             
         except Exception as e:
             import traceback
