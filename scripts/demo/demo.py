@@ -8,10 +8,11 @@ import json
 import sys
 from pathlib import Path
 from datetime import datetime
-from repo_manager import RepoManager
-from mutator import Mutator, MutationSpec
-from pr_manager import PRManager
-from test_analyzer import TestAnalyzer
+from github.repo_manager import RepoManager
+from github.pr_manager import PRManager
+from github.test_analyzer import TestAnalyzer
+from mutation.mutator import Mutator, MutationSpec
+from mutation.mutations import get_mutation
 from cleanup import CleanupManager
 
 
@@ -22,39 +23,21 @@ REPO_OPTIONS = {
         "url": "https://github.com/zhengziying78/demo-httpie-cli",
         "base_branch": "master",
         "repo_id": "zhengziying78/demo-httpie-cli",
-        "mutation": {
-            "file_path": "httpie/cli/dicts.py",
-            "line_number": 26,
-            "find_pattern": r"if value is None:",
-            "replace_pattern": "if value is not None:",
-            "description": "Change None check logic"
-        }
+        "mutation": get_mutation("demo-httpie-cli")
     },
     "2": {
         "name": "demo-pallets-click",
         "url": "https://github.com/zhengziying78/demo-pallets-click",
         "base_branch": "main",
         "repo_id": "zhengziying78/demo-pallets-click",
-        "mutation": {
-            "file_path": "src/click/utils.py",
-            "line_number": 126,
-            "find_pattern": r"self.encoding = encoding",
-            "replace_pattern": "self.encoding = \"utf-16\"",
-            "description": "Change encoding assignment"
-        }
+        "mutation": get_mutation("demo-pallets-click")
     },
     "3": {
         "name": "demo-psf-requests",
         "url": "https://github.com/zhengziying78/demo-psf-requests",
         "base_branch": "main",
         "repo_id": "zhengziying78/demo-psf-requests",
-        "mutation": {
-            "file_path": "src/requests/status_codes.py",
-            "line_number": 87,
-            "find_pattern": r'444: \("no_response", "none"\),',
-            "replace_pattern": '444: ("no_response", "no"),',
-            "description": "Change status code description"
-        }
+        "mutation": get_mutation("demo-psf-requests")
     }
 }
 

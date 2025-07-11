@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Dict, Any
 from datetime import datetime
-from check_utils import CheckProcessor
+from .check_utils import CheckProcessor
 
 
 class TestAnalyzer:
