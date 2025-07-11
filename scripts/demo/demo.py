@@ -1,8 +1,9 @@
 """
 Main entry point for mutation testing PoC demo.
 
-Usage: python demo.py [repo_name]
+Usage: python demo.py [repo_name] [--capture-data]
   repo_name: demo-httpie-cli, demo-pallets-click, or demo-psf-requests
+  --capture-data: Save API responses as test fixtures
 """
 import json
 import sys
@@ -13,6 +14,7 @@ from mutator import Mutator, MutationSpec
 from pr_manager import PRManager
 from test_analyzer import TestAnalyzer
 from cleanup import CleanupManager
+from data_capture import DataCapture
 
 
 # Configuration - repo options
@@ -142,9 +144,21 @@ def main():
     print("Starting mutation testing PoC demo...")
     print()
     
-    # Step 0: Select repository
-    if len(sys.argv) > 1:
-        repo_name = sys.argv[1]
+    # Step 0: Parse arguments and select repository
+    capture_data = False
+    repo_name = None
+    
+    # Parse command line arguments
+    for arg in sys.argv[1:]:
+        if arg == "--capture-data":
+            capture_data = True
+        elif not arg.startswith("--"):
+            repo_name = arg
+    
+    # Initialize data capture
+    data_capture = DataCapture(capture_enabled=capture_data)
+    
+    if repo_name:
         selected_repo = get_repo_by_name(repo_name)
         if selected_repo:
             print(f"Using repository from command line: {selected_repo['name']}")
@@ -222,10 +236,20 @@ This mutation tests whether the test suite can detect the change in {mutation_co
         print("Waiting for test results...")
         pr_results = pr_manager.wait_for_checks(pr_number, timeout_seconds=600, repo=selected_repo['repo_id'])  # 10 minutes timeout
         
+        # Capture raw data if enabled
+        if capture_data:
+            data_capture.capture_pr_status(pr_results.get('status', {}), selected_repo['name'])
+            data_capture.capture_checks(pr_results.get('checks', []), selected_repo['name'])
+            data_capture.capture_pr_results(pr_results, selected_repo['name'])
+        
         # Step 7: Analyze and save results
         print("Analyzing test results...")
         analysis = test_analyzer.analyze_pr_results(pr_results)
         results_file = test_analyzer.save_results(analysis)
+        
+        # Capture analysis results if enabled
+        if capture_data:
+            data_capture.capture_analysis_results(analysis, selected_repo['name'])
         
         print(f"Test results saved to: {results_file}")
         print(f"Mutation testing summary:")

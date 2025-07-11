@@ -1,0 +1,32 @@
+[
+  {
+    "bucket": "fail",
+    "completedAt": "2025-07-11T18:03:12Z",
+    "description": "",
+    "link": "https://github.com/zhengziying78/demo-pallets-click/actions/runs/16226633011/job/45819955294",
+    "name": "3.12",
+    "startedAt": "2025-07-11T18:02:55Z",
+    "state": "FAILURE",
+    "workflow": "Tests"
+  },
+  {
+    "bucket": "pass",
+    "completedAt": "2025-07-11T18:03:13Z",
+    "description": "",
+    "link": "https://github.com/zhengziying78/demo-pallets-click/actions/runs/16226633054/job/45819955228",
+    "name": "main",
+    "startedAt": "2025-07-11T18:02:54Z",
+    "state": "SUCCESS",
+    "workflow": "pre-commit"
+  },
+  {
+    "bucket": "pass",
+    "completedAt": "2025-07-11T18:03:11Z",
+    "description": "",
+    "link": "https://github.com/zhengziying78/demo-pallets-click/actions/runs/16226633011/job/45819955326",
+    "name": "typing",
+    "startedAt": "2025-07-11T18:02:54Z",
+    "state": "SUCCESS",
+    "workflow": "Tests"
+  }
+]
