@@ -1,0 +1,74 @@
+{
+  "status": {
+    "mergeable": "MERGEABLE",
+    "number": 24,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2025-07-11T18:06:25Z",
+        "conclusion": "FAILURE",
+        "detailsUrl": "https://github.com/zhengziying78/demo-httpie-cli/actions/runs/16226658583/job/45820038539",
+        "name": "coverage",
+        "startedAt": "2025-07-11T18:04:12Z",
+        "status": "COMPLETED",
+        "workflowName": "Coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2025-07-11T18:06:22Z",
+        "conclusion": "FAILURE",
+        "detailsUrl": "https://github.com/zhengziying78/demo-httpie-cli/actions/runs/16226658591/job/45820038860",
+        "name": "test (macos-13, 3.9, 1)",
+        "startedAt": "2025-07-11T18:04:17Z",
+        "status": "COMPLETED",
+        "workflowName": "Tests"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2025-07-11T18:04:38Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/zhengziying78/demo-httpie-cli/actions/runs/16226658584/job/45820038585",
+        "name": "code-style",
+        "startedAt": "2025-07-11T18:04:12Z",
+        "status": "COMPLETED",
+        "workflowName": "Code Style Check"
+      }
+    ],
+    "title": "Mutation Test: Change None check logic (20250711-110335)",
+    "url": "https://github.com/zhengziying78/demo-httpie-cli/pull/24"
+  },
+  "checks": [
+    {
+      "bucket": "fail",
+      "completedAt": "2025-07-11T18:06:22Z",
+      "description": "",
+      "link": "https://github.com/zhengziying78/demo-httpie-cli/actions/runs/16226658591/job/45820038860",
+      "name": "test (macos-13, 3.9, 1)",
+      "startedAt": "2025-07-11T18:04:17Z",
+      "state": "FAILURE",
+      "workflow": "Tests"
+    },
+    {
+      "bucket": "fail",
+      "completedAt": "2025-07-11T18:06:25Z",
+      "description": "",
+      "link": "https://github.com/zhengziying78/demo-httpie-cli/actions/runs/16226658583/job/45820038539",
+      "name": "coverage",
+      "startedAt": "2025-07-11T18:04:12Z",
+      "state": "FAILURE",
+      "workflow": "Coverage"
+    },
+    {
+      "bucket": "pass",
+      "completedAt": "2025-07-11T18:04:38Z",
+      "description": "",
+      "link": "https://github.com/zhengziying78/demo-httpie-cli/actions/runs/16226658584/job/45820038585",
+      "name": "code-style",
+      "startedAt": "2025-07-11T18:04:12Z",
+      "state": "SUCCESS",
+      "workflow": "Code Style Check"
+    }
+  ],
+  "completed": true
+}

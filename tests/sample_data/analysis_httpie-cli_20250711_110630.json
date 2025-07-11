@@ -1,0 +1,54 @@
+{
+  "pr_number": 24,
+  "pr_url": "https://github.com/zhengziying78/demo-httpie-cli/pull/24",
+  "timestamp": "2025-07-11T11:06:30.702706",
+  "completed": true,
+  "timeout": false,
+  "overall_status": null,
+  "checks": [
+    {
+      "name": "test (macos-13, 3.9, 1)",
+      "state": "FAILURE",
+      "bucket": "fail",
+      "url": "https://github.com/zhengziying78/demo-httpie-cli/actions/runs/16226658591/job/45820038860",
+      "started_at": "2025-07-11T18:04:17Z",
+      "completed_at": "2025-07-11T18:06:22Z",
+      "description": "",
+      "workflow": "Tests"
+    },
+    {
+      "name": "coverage",
+      "state": "FAILURE",
+      "bucket": "fail",
+      "url": "https://github.com/zhengziying78/demo-httpie-cli/actions/runs/16226658583/job/45820038539",
+      "started_at": "2025-07-11T18:04:12Z",
+      "completed_at": "2025-07-11T18:06:25Z",
+      "description": "",
+      "workflow": "Coverage"
+    },
+    {
+      "name": "code-style",
+      "state": "SUCCESS",
+      "bucket": "pass",
+      "url": "https://github.com/zhengziying78/demo-httpie-cli/actions/runs/16226658584/job/45820038585",
+      "started_at": "2025-07-11T18:04:12Z",
+      "completed_at": "2025-07-11T18:04:38Z",
+      "description": "",
+      "workflow": "Code Style Check"
+    }
+  ],
+  "test_failures": [
+    {
+      "check_name": "test (macos-13, 3.9, 1)",
+      "details": ""
+    }
+  ],
+  "summary": {
+    "total_checks": 3,
+    "passed_checks": 1,
+    "failed_checks": 2,
+    "test_failures_count": 1,
+    "mutation_killed": true,
+    "mutation_survived": false
+  }
+}

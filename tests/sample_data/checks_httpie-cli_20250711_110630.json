@@ -1,0 +1,32 @@
+[
+  {
+    "bucket": "fail",
+    "completedAt": "2025-07-11T18:06:22Z",
+    "description": "",
+    "link": "https://github.com/zhengziying78/demo-httpie-cli/actions/runs/16226658591/job/45820038860",
+    "name": "test (macos-13, 3.9, 1)",
+    "startedAt": "2025-07-11T18:04:17Z",
+    "state": "FAILURE",
+    "workflow": "Tests"
+  },
+  {
+    "bucket": "fail",
+    "completedAt": "2025-07-11T18:06:25Z",
+    "description": "",
+    "link": "https://github.com/zhengziying78/demo-httpie-cli/actions/runs/16226658583/job/45820038539",
+    "name": "coverage",
+    "startedAt": "2025-07-11T18:04:12Z",
+    "state": "FAILURE",
+    "workflow": "Coverage"
+  },
+  {
+    "bucket": "pass",
+    "completedAt": "2025-07-11T18:04:38Z",
+    "description": "",
+    "link": "https://github.com/zhengziying78/demo-httpie-cli/actions/runs/16226658584/job/45820038585",
+    "name": "code-style",
+    "startedAt": "2025-07-11T18:04:12Z",
+    "state": "SUCCESS",
+    "workflow": "Code Style Check"
+  }
+]
