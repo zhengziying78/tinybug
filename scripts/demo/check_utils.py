@@ -227,7 +227,7 @@ class CheckProcessor:
         """Parse test failure information from log output."""
         failed_tests = []
         
-        # Look for pytest short test summary info block first (most reliable)
+        # Look for pytest short test summary info block (most reliable)
         summary_match = re.search(
             r'=+ short test summary info =+\s*\n(.*?)\n=+.*?=+', 
             log_output, 
@@ -236,38 +236,24 @@ class CheckProcessor:
         
         if summary_match:
             summary_block = summary_match.group(1)
-            # Extract FAILED lines from the summary
+            # Extract FAILED lines from the summary - be more specific
             failed_lines = re.findall(r'FAILED\s+([^\n\r]+)', summary_block)
             for line in failed_lines:
                 line = line.strip()
-                if line and line not in failed_tests:
-                    failed_tests.append(line)
+                # Only include lines that look like proper test paths
+                if line and '::' in line and line not in failed_tests:
+                    # Filter out obvious noise patterns
+                    if not re.match(r'^[\[\]:()]+$', line) and len(line) > 5:
+                        failed_tests.append(line)
         
-        # If no short summary found, look for individual FAILED patterns
+        # If no short summary found, look for individual FAILED patterns (fallback)
         if not failed_tests:
-            # Common patterns for test failures
-            patterns = [
-                # pytest FAILED patterns
-                r'FAILED\s+([^\s]+(?:\s+-\s+[^\n\r]+)?)',
-                # unittest failures
-                r'FAIL:\s+([^\s]+)',
-                # Generic test failure patterns
-                r'test_[^\s]+\s+.*FAILED',
-                r'::test_[^\s]+\s+FAILED'
-            ]
-            
-            for pattern in patterns:
-                matches = re.findall(pattern, log_output, re.IGNORECASE | re.MULTILINE)
-                for match in matches:
-                    if isinstance(match, tuple):
-                        # If the pattern captured multiple groups, join them
-                        test_info = ' - '.join(match)
-                    else:
-                        test_info = match
-                    
-                    # Clean up the test info
-                    test_info = test_info.strip()
-                    if test_info and test_info not in failed_tests:
-                        failed_tests.append(test_info)
+            # Only look for well-formed test paths
+            pattern = r'FAILED\s+((?:tests?/)?[a-zA-Z0-9_/.-]+\.py::[a-zA-Z0-9_]+(?:\s+-\s+[^\n\r]+)?)'
+            matches = re.findall(pattern, log_output, re.IGNORECASE | re.MULTILINE)
+            for match in matches:
+                test_info = match.strip()
+                if test_info and test_info not in failed_tests:
+                    failed_tests.append(test_info)
         
         return failed_tests[:10]  # Limit to first 10 failures to avoid overwhelming output
