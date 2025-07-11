@@ -3,8 +3,9 @@ Test result analysis functionality for mutation testing PoC.
 """
 import json
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any
 from datetime import datetime
+from check_utils import CheckProcessor
 
 
 class TestAnalyzer:
@@ -43,24 +44,14 @@ class TestAnalyzer:
         checks = pr_data.get('checks', [])
         
         try:
+            # Normalize all checks using the shared utility
             for check in checks:
-                if isinstance(check, dict):
-                    check_info = {
-                        'name': check.get('name'),
-                        'status': check.get('status'),
-                        'conclusion': check.get('conclusion'),
-                        'url': check.get('url'),
-                        'started_at': check.get('started_at'),
-                        'completed_at': check.get('completed_at')
-                    }
-                    analysis['checks'].append(check_info)
-                    
-                    # Extract test failures if this is a test check
-                    if check.get('conclusion') == 'failure' and self._is_test_check(check):
-                        analysis['test_failures'].append({
-                            'check_name': check.get('name'),
-                            'details': check.get('details', 'No details available')
-                        })
+                normalized_check = CheckProcessor.normalize_check(check)
+                analysis['checks'].append(normalized_check)
+            
+            # Extract test failures using the shared utility
+            analysis['test_failures'] = CheckProcessor.get_failed_test_checks(checks)
+            
         except Exception as e:
             import traceback
             print(f"ERROR: Exception in checks processing: {e}")
@@ -71,27 +62,18 @@ class TestAnalyzer:
         
         return analysis
     
-    def _is_test_check(self, check: Dict[str, Any]) -> bool:
-        """Determine if a check is a test-related check."""
-        if not isinstance(check, dict):
-            return False
-        test_keywords = ['test', 'pytest', 'unittest', 'ci', 'build']
-        check_name = check.get('name', '').lower()
-        return any(keyword in check_name for keyword in test_keywords)
-    
     def _generate_summary(self, analysis: Dict[str, Any]) -> Dict[str, Any]:
         """Generate a summary of the test results."""
-        total_checks = len(analysis['checks'])
-        failed_checks = len([c for c in analysis['checks'] if c.get('conclusion') == 'failure'])
-        passed_checks = len([c for c in analysis['checks'] if c.get('conclusion') == 'success'])
+        # Use the shared utility to get consistent summary
+        check_summary = CheckProcessor.get_check_summary(analysis['checks'])
         
         return {
-            'total_checks': total_checks,
-            'passed_checks': passed_checks,
-            'failed_checks': failed_checks,
+            'total_checks': check_summary['total_checks'],
+            'passed_checks': check_summary['passed_checks'],
+            'failed_checks': check_summary['failed_checks'],
             'test_failures_count': len(analysis['test_failures']),
-            'mutation_killed': failed_checks > 0,  # If any tests fail, mutation is "killed"
-            'mutation_survived': failed_checks == 0 and analysis['completed']
+            'mutation_killed': check_summary['failed_checks'] > 0,  # If any tests fail, mutation is "killed"
+            'mutation_survived': check_summary['failed_checks'] == 0 and analysis['completed']
         }
     
     def save_results(self, analysis: Dict[str, Any], filename: str = None) -> Path:
