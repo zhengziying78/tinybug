@@ -10,7 +10,7 @@ from check_utils import CheckProcessor
 
 class TestAnalyzer:
     def __init__(self, output_dir: Path = None):
-        self.output_dir = output_dir or Path("./test_results")
+        self.output_dir = output_dir or Path.home() / "Desktop"
         self.output_dir.mkdir(parents=True, exist_ok=True)
     
     def analyze_pr_results(self, pr_data: Dict[str, Any]) -> Dict[str, Any]:
