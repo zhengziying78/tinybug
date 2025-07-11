@@ -5,7 +5,7 @@ import subprocess
 import json
 from pathlib import Path
 from typing import Dict, Any, Optional
-from check_utils import CheckProcessor
+from .check_utils import CheckProcessor
 
 
 class PRManager:
