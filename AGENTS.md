@@ -12,7 +12,7 @@ When creating commits or pull requests, ALWAYS include attribution to the agent 
 ### For Commits
 All commits must end with:
 ```
-🤖 Generated with [${AGENT_NAME} Code](${AGENT_URL})
+🤖 Generated with [${AGENT_NAME}](${AGENT_URL})
 
 Co-Authored-By: ${AGENT_NAME} <${AGENT_EMAIL}>
 ```
@@ -20,7 +20,7 @@ Co-Authored-By: ${AGENT_NAME} <${AGENT_EMAIL}>
 ### For Pull Requests
 All pull request descriptions must end with:
 ```
-🤖 Generated with [${AGENT_NAME} Code](${AGENT_URL})
+🤖 Generated with [${AGENT_NAME}](${AGENT_URL})
 ```
 
 ### For Pull Request Merges
