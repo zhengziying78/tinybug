@@ -1,0 +1,79 @@
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+.Python
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.pyre/
+.pytype/
+.hypothesis/
+.nox/
+.tox/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+pip-wheel-metadata/
+*.egg-info/
+.eggs/
+*.egg
+
+# Virtual environments
+.tinybug_venv/
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# JavaScript / Web build output
+node_modules/
+.npm/
+.pnpm-store/
+.pnp.*
+.yarn/
+.next/
+out/
+dist/
+build/
+.vercel/
+.turbo/
+bun.lockb
+
+# Logs and databases
+*.log
+*.log.*
+logs/
+*.sqlite
+*.sqlite3
+*.db
+
+# Environment and secret files
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# AI agent local configuration
+.claude/

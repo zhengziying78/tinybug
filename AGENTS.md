@@ -1,4 +1,4 @@
-# Claude Instructions
+# Agent Instructions
 
 ## Command Execution Policy
 - Run all read-only commands without asking for permission
@@ -7,20 +7,20 @@
 - Examples of commands to ask permission for: `sudo`, `rm`, `mv` (when moving to different directories), `git commit`, `git push`, etc.
 
 ## Git Attribution Policy
-When creating commits or pull requests, ALWAYS include attribution to Claude:
+When creating commits or pull requests, ALWAYS include attribution to the agent completing the work. Replace the placeholders below with the correct agent name, URL, and email:
 
 ### For Commits
 All commits must end with:
 ```
-🤖 Generated with [Claude Code](https://claude.ai/code)
+🤖 Generated with [${AGENT_NAME} Code](${AGENT_URL})
 
-Co-Authored-By: Claude <noreply@anthropic.com>
+Co-Authored-By: ${AGENT_NAME} <${AGENT_EMAIL}>
 ```
 
 ### For Pull Requests
 All pull request descriptions must end with:
 ```
-🤖 Generated with [Claude Code](https://claude.ai/code)
+🤖 Generated with [${AGENT_NAME} Code](${AGENT_URL})
 ```
 
 ### For Pull Request Merges
@@ -65,4 +65,4 @@ Where:
 - `{YYYYMMDD}`: today's date in macbook's local time in YYYYMMDD format. For example, June 25, 2025 becomes "20250625"
 - `{description}`: brief description using kebab-case
 
-This ensures proper attribution when Claude creates commits or pull requests for the leetcode-testgen project.
+This ensures proper attribution regardless of which agent creates commits or pull requests for the project.
