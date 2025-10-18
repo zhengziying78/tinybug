@@ -35,4 +35,6 @@ Key details:
 
 After pushing the changes, open the workflow run in the **Actions** tab. Under the run’s summary page you should see an **Artifacts** section with an entry such as `pytest-junit`. Downloading the artifact confirms the XML file is being stored (for example, run [`18618409274`](https://github.com/zhengziying78/demo-httpie-cli/actions/runs/18618409274) uploaded `pytest-junit.zip`, 15&nbsp;KB, artifact ID `4307818501`).
 
+<img width="1787" height="943" alt="image" src="https://github.com/user-attachments/assets/96fb8b50-44eb-434d-9d91-5f60ad3724bb" />
+
 Once the artifact is available, automation (e.g., Temporal workflows) can fetch and parse `junit.xml` instead of scraping raw logs.
