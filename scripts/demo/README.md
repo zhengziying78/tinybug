@@ -5,6 +5,10 @@ This directory contains scripts for running mutation testing demos and managing 
 ## Files
 
 - `demo.py` - Main mutation testing demo script
+- `activities.py` - Idempotent helpers for cloning, mutating, testing, and cleanup
+- `flow.py` - Orchestrator that stitches helpers together and returns structured results
+- `temporal_worker.py` - Temporal activities, workflow definition, and worker runner
+- `start_temporal_workflow.py` - CLI to launch the Temporal workflow
 - `cleanup_github.py` - Utility to clean up open pull requests in demo repositories
 
 ## demo.py
@@ -57,6 +61,24 @@ The script performs these steps:
 
 Results are saved to a timestamped JSON file in the current directory.
 
+## Temporal Worker & Workflow
+
+The demo flow can also be executed via Temporal:
+
+- `temporal_worker.py` registers activities and the `RunSingleMutationWorkflow` that mirrors the demo steps. Run it as a worker:
+
+  ```bash
+  python scripts/demo/temporal_worker.py --task-queue mutation-demo-task-queue
+  ```
+
+- `start_temporal_workflow.py` connects to Temporal and starts the workflow:
+
+  ```bash
+  python scripts/demo/start_temporal_workflow.py --repo demo-httpie-cli --wait
+  ```
+
+Set `--address` and `--namespace` to match your Temporal environment. The `--wait` flag waits for completion and prints the structured result.
+
 ## cleanup_github.py
 
 Utility script to close all open pull requests in the three demo repositories. Useful for cleaning up after running multiple demo sessions.
@@ -84,11 +106,11 @@ The script targets these repositories:
 
 ## Dependencies
 
-Both scripts require:
-- Python 3.7+
+Scripts require:
+- Python 3.9+
 - GitHub CLI (`gh`) installed and authenticated
-- Internet connection
-- Access to the demo repositories
+- Internet connection and access to the demo repositories
+- Temporal Python SDK (`temporalio`) when using the worker/workflow scripts (install with `pip install temporalio` or add it to your project dependencies)
 
 ## Repository Structure
 
