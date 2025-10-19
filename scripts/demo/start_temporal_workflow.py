@@ -10,8 +10,8 @@ from typing import Optional
 
 from temporalio.client import Client
 
-from demo import get_repo_by_name
 from flow import MutationFlowResult, generate_mutation_metadata
+from known_repos import REPO_OPTIONS
 from temporal_worker import MutationWorkflowParams, RunSingleMutationWorkflow
 
 
@@ -27,10 +27,10 @@ async def start_workflow(
     base_clone_dir: Optional[str],
     wait_for_result: bool,
 ) -> MutationFlowResult:
-    repo_config = get_repo_by_name(repo_name)
+    repo_config = REPO_OPTIONS.get(repo_name)
     if not repo_config:
-        available = ["demo-httpie-cli", "demo-pallets-click", "demo-psf-requests"]
-        raise ValueError(f"Unknown repository '{repo_name}'. Options: {', '.join(available)}")
+        available = ", ".join(sorted(REPO_OPTIONS.keys()))
+        raise ValueError(f"Unknown repository '{repo_name}'. Options: {available}")
 
     mutation_config = repo_config["mutation"]
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
