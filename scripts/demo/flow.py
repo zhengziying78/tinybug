@@ -131,7 +131,7 @@ def run_single_mutation_flow(
     repo_url = repo_config["url"]
     repo_id = repo_config.get("repo_id")
 
-        mutation_metadata = generate_mutation_metadata(mutation_config, timestamp=timestamp)
+    mutation_metadata = generate_mutation_metadata(mutation_config, timestamp=timestamp)
     branch_name = mutation_metadata["branch_name"]
     pr_title = mutation_metadata["pr_title"]
     pr_body = mutation_metadata["pr_body"]
