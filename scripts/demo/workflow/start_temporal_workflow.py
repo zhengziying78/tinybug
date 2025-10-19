@@ -10,9 +10,9 @@ from typing import Optional
 
 from temporalio.client import Client
 
-from flow import MutationFlowResult, generate_mutation_metadata
+from workflow.flow import MutationFlowResult, generate_mutation_metadata
 from known_repos import KNOWN_REPOS
-from temporal_worker import MutationWorkflowParams, RunSingleMutationWorkflow
+from workflow.temporal_worker import MutationWorkflowParams, RunSingleMutationWorkflow
 
 
 async def start_workflow(

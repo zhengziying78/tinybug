@@ -6,9 +6,10 @@ This directory contains scripts for running mutation testing demos and managing 
 
 - `demo.py` - Main mutation testing demo script
 - `activities.py` - Idempotent helpers for cloning, mutating, testing, and cleanup
-- `flow.py` - Orchestrator that stitches helpers together and returns structured results
-- `temporal_worker.py` - Temporal activities, workflow definition, and worker runner
-- `start_temporal_workflow.py` - CLI to launch the Temporal workflow
+- `workflow/activities.py` - Idempotent helpers for cloning, mutating, testing, and cleanup
+- `workflow/flow.py` - Orchestrator that stitches helpers together and returns structured results
+- `workflow/temporal_worker.py` - Temporal activities, workflow definition, and worker runner
+- `workflow/start_temporal_workflow.py` - CLI to launch the Temporal workflow
 - `cleanup_github.py` - Utility to clean up open pull requests in demo repositories
 
 ## demo.py
@@ -65,16 +66,16 @@ Results are saved to a timestamped JSON file in the `mutation_results/` director
 
 The demo flow can also be executed via Temporal:
 
-- `temporal_worker.py` registers activities and the `RunSingleMutationWorkflow` that mirrors the demo steps. Run it as a worker:
+- `workflow/temporal_worker.py` registers activities and the `RunSingleMutationWorkflow` that mirrors the demo steps. Run it as a worker:
 
   ```bash
-  python scripts/demo/temporal_worker.py --task-queue mutation-demo-task-queue
+  python scripts/demo/workflow/temporal_worker.py --task-queue mutation-demo-task-queue
   ```
 
-- `start_temporal_workflow.py` connects to Temporal and starts the workflow:
+- `workflow/start_temporal_workflow.py` connects to Temporal and starts the workflow:
 
   ```bash
-  python scripts/demo/start_temporal_workflow.py --repo demo-httpie-cli --wait
+  python scripts/demo/workflow/start_temporal_workflow.py --repo demo-httpie-cli --wait
   ```
 
 - Use the Temporal CLI to observe workflow execution (requires `temporal` CLI):
