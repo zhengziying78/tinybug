@@ -9,13 +9,18 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
-DEFAULT_RESULTS_DIR = Path.cwd() / "mutation_results"
+DEFAULT_RESULTS_DIR_NAME = "mutation_results"
 
 
 def _sanitize_filename(value: str) -> str:
     """Return a filesystem-safe representation of the value."""
     safe = re.sub(r"[^A-Za-z0-9_.-]+", "-", value.strip())
     return safe.strip("-") or "result"
+
+
+def _default_results_dir() -> Path:
+    """Compute the default directory for storing mutation results."""
+    return Path.cwd() / DEFAULT_RESULTS_DIR_NAME
 
 
 def persist_flow_result(
@@ -43,7 +48,7 @@ def persist_flow_result(
     repo_slug = _sanitize_filename(str(repo_identifier).split("/")[-1])
     filename = f"{timestamp}_{repo_slug}_mutation_result.json"
 
-    target_dir = Path(base_dir) if base_dir else DEFAULT_RESULTS_DIR
+    target_dir = Path(base_dir) if base_dir else _default_results_dir()
     target_dir.mkdir(parents=True, exist_ok=True)
 
     output_path = target_dir / filename
