@@ -25,6 +25,7 @@ async def start_workflow(
     timeout_seconds: int,
     output_dir: Optional[str],
     base_clone_dir: Optional[str],
+    summary_output_dir: Optional[str],
     wait_for_result: bool,
 ) -> MutationFlowResult:
     repo_config = KNOWN_REPOS.get(repo_name)
@@ -42,6 +43,7 @@ async def start_workflow(
         output_dir=output_dir,
         base_clone_dir=base_clone_dir,
         timestamp=timestamp,
+        summary_output_dir=summary_output_dir,
     )
 
     client = await Client.connect(address, namespace=namespace)
@@ -74,6 +76,8 @@ async def start_workflow(
     print("Workflow started. Expected branch/PR names:")
     print(f"  - Branch: {interim_result.branch_name}")
     print(f"  - PR Title: {interim_result.pr_title}")
+    if summary_output_dir:
+        print(f"  - Summary directory: {summary_output_dir}")
     return interim_result
 
 
@@ -87,6 +91,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--timeout", type=int, default=600, help="Check wait timeout in seconds")
     parser.add_argument("--output-dir", help="Directory to store analysis artifacts")
     parser.add_argument("--base-clone-dir", help="Override base directory for cloning repos")
+    parser.add_argument("--summary-dir", help="Directory to store workflow summary JSON")
     parser.add_argument("--wait", action="store_true", help="Wait for workflow completion and print result")
     return parser.parse_args()
 
@@ -102,6 +107,7 @@ async def main() -> None:
         timeout_seconds=args.timeout,
         output_dir=args.output_dir,
         base_clone_dir=args.base_clone_dir,
+        summary_output_dir=args.summary_dir,
         wait_for_result=args.wait,
     )
 

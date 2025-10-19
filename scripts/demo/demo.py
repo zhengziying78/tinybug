@@ -112,6 +112,9 @@ def print_mutation_summary(selected_repo, result):
     else:
         print("  - No analysis available")
 
+    if result.summary_file:
+        print(f"  - Summary file: {result.summary_file}")
+
     if result.error:
         print()
         print("Errors encountered during workflow:")

@@ -22,6 +22,7 @@ from activities import (
     create_pull_request,
     wait_for_checks,
 )
+from storage import persist_flow_result
 
 
 def build_pr_body(mutation_config: Mapping[str, Any]) -> str:
@@ -71,6 +72,7 @@ class MutationFlowResult:
     results_file: Optional[str] = None
     pr_results: Optional[Dict[str, Any]] = None
     cleanup_details: Optional[Dict[str, Any]] = None
+    summary_file: Optional[str] = None
     error: Optional[str] = None
     traceback: Optional[str] = None
     repo_path: Optional[str] = None
@@ -88,6 +90,7 @@ class MutationFlowResult:
             "mutation_applied": self.mutation_applied,
             "analysis": self.analysis,
             "results_file": self.results_file,
+            "summary_file": self.summary_file,
             "pr_results": self.pr_results,
             "cleanup_details": self.cleanup_details,
             "error": self.error,
@@ -103,6 +106,7 @@ def run_single_mutation_flow(
     timeout_seconds: int = 600,
     output_dir: Optional[Path] = None,
     base_clone_dir: Optional[str] = None,
+    summary_output_dir: Optional[Path] = None,
     timestamp: Optional[str] = None,
 ) -> MutationFlowResult:
     """
@@ -127,7 +131,7 @@ def run_single_mutation_flow(
     repo_url = repo_config["url"]
     repo_id = repo_config.get("repo_id")
 
-    mutation_metadata = generate_mutation_metadata(mutation_config, timestamp=timestamp)
+        mutation_metadata = generate_mutation_metadata(mutation_config, timestamp=timestamp)
     branch_name = mutation_metadata["branch_name"]
     pr_title = mutation_metadata["pr_title"]
     pr_body = mutation_metadata["pr_body"]
@@ -214,5 +218,16 @@ def run_single_mutation_flow(
             repo_id=repo_id,
         )
         result.cleanup_details = cleanup_details
+
+        try:
+            summary_path = persist_flow_result(
+                result.to_dict(),
+                summary_output_dir,
+            )
+            result.summary_file = str(summary_path)
+            result.metadata["summary_file"] = result.summary_file
+            log(f"Result summary saved to {summary_path}")
+        except Exception as storage_exc:
+            log(f"Failed to persist result summary: {storage_exc}")
 
     return result
