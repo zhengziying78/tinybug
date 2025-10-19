@@ -7,7 +7,6 @@ Usage: python demo.py [repo_name]
 import json
 import sys
 from pathlib import Path
-from datetime import datetime
 from mutation.mutations import get_mutation
 from flow import run_single_mutation_flow
 
@@ -137,32 +136,15 @@ def main():
     mutation_config = selected_repo["mutation"]
     
     # Generate timestamp and create dynamic names
-    timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
-    branch_name = f"mutation-test-demo-{timestamp}"
-    pr_title = f"Mutation Test: {mutation_config['description']} ({timestamp})"
-    pr_body = f"""
-This PR contains a mutation for testing purposes.
-
-**Mutation Details:**
-- File: {mutation_config['file_path']}
-- Line: {mutation_config['line_number']}
-- Change: `{mutation_config['find_pattern']}` → `{mutation_config['replace_pattern']}`
-
-This mutation tests whether the test suite can detect the change in {mutation_config['description'].lower()}.
-"""
-    
     result = run_single_mutation_flow(
         selected_repo,
-        branch_name=branch_name,
-        pr_title=pr_title,
-        pr_body=pr_body,
         timeout_seconds=600,
     )
     
     print()
     print("Mutation testing summary:")
     print(f"  - Repository: {selected_repo['url']}")
-    print(f"  - Branch: {branch_name}")
+    print(f"  - Branch: {result.branch_name}")
     print(f"  - Pull request: {result.pr_url or 'N/A'}")
     print(f"  - Mutation applied: {result.mutation_applied}")
     
