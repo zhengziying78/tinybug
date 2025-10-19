@@ -8,7 +8,7 @@ from typing import Any, Dict, Iterable, List, Tuple
 from mutation.mutations import get_mutation
 
 # Repository configuration keyed by canonical repo name.
-REPO_OPTIONS: Dict[str, Dict[str, Any]] = {
+KNOWN_REPOS: Dict[str, Dict[str, Any]] = {
     "demo-httpie-cli": {
         "name": "demo-httpie-cli",
         "url": "https://github.com/zhengziying78/demo-httpie-cli",
@@ -42,9 +42,9 @@ def repo_menu_entries() -> List[Tuple[str, Dict[str, Any]]]:
 
     The order matches the definition order above.
     """
-    return list(REPO_OPTIONS.items())
+    return list(KNOWN_REPOS.items())
 
 
 def repo_choices() -> Iterable[str]:
     """Return available repo names."""
-    return REPO_OPTIONS.keys()
+    return KNOWN_REPOS.keys()

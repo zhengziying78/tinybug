@@ -11,7 +11,7 @@ from typing import Optional
 from temporalio.client import Client
 
 from flow import MutationFlowResult, generate_mutation_metadata
-from known_repos import REPO_OPTIONS
+from known_repos import KNOWN_REPOS
 from temporal_worker import MutationWorkflowParams, RunSingleMutationWorkflow
 
 
@@ -27,9 +27,9 @@ async def start_workflow(
     base_clone_dir: Optional[str],
     wait_for_result: bool,
 ) -> MutationFlowResult:
-    repo_config = REPO_OPTIONS.get(repo_name)
+    repo_config = KNOWN_REPOS.get(repo_name)
     if not repo_config:
-        available = ", ".join(sorted(REPO_OPTIONS.keys()))
+        available = ", ".join(sorted(KNOWN_REPOS.keys()))
         raise ValueError(f"Unknown repository '{repo_name}'. Options: {available}")
 
     mutation_config = repo_config["mutation"]

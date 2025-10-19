@@ -6,7 +6,7 @@ Usage: python demo.py [repo_name]
 """
 import sys
 from flow import run_single_mutation_flow
-from known_repos import DEFAULT_REPO_NAME, REPO_OPTIONS, repo_menu_entries
+from known_repos import DEFAULT_REPO_NAME, KNOWN_REPOS, repo_menu_entries
 
 
 def select_repo_with_timeout():
@@ -55,7 +55,7 @@ def select_repo_with_timeout():
             print(f"\rUser input received: {user_input}                    ")
             if user_input in choice_map:
                 choice = choice_map[user_input]
-            elif user_input in REPO_OPTIONS:
+            elif user_input in KNOWN_REPOS:
                 choice = user_input
             elif user_input == "":
                 # Empty input (Enter pressed) means use default
@@ -71,7 +71,7 @@ def select_repo_with_timeout():
         print(f"\rTime's up! Using default: {DEFAULT_REPO_NAME}                ")
         choice = DEFAULT_REPO_NAME
     
-    selected_repo = REPO_OPTIONS[choice]
+    selected_repo = KNOWN_REPOS[choice]
     print(f"\nSelected: {selected_repo['name']}")
     return selected_repo
 
@@ -84,7 +84,7 @@ def main():
     # Step 0: Select repository
     if len(sys.argv) > 1:
         repo_name = sys.argv[1]
-        selected_repo = REPO_OPTIONS.get(repo_name)
+        selected_repo = KNOWN_REPOS.get(repo_name)
         if selected_repo:
             print(f"Using repository from command line: {selected_repo['name']}")
         else:
