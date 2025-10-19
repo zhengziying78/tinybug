@@ -4,39 +4,9 @@ Main entry point for mutation testing PoC demo.
 Usage: python demo.py [repo_name]
   repo_name: demo-httpie-cli, demo-pallets-click, or demo-psf-requests
 """
-import json
 import sys
-from pathlib import Path
-from mutation.mutations import get_mutation
 from flow import run_single_mutation_flow
-
-
-# Configuration - repo options
-REPO_OPTIONS = {
-    "1": {
-        "name": "demo-httpie-cli",
-        "url": "https://github.com/zhengziying78/demo-httpie-cli",
-        "base_branch": "master",
-        "repo_id": "zhengziying78/demo-httpie-cli",
-        "mutation": get_mutation("demo-httpie-cli")
-    },
-    "2": {
-        "name": "demo-pallets-click",
-        "url": "https://github.com/zhengziying78/demo-pallets-click",
-        "base_branch": "main",
-        "repo_id": "zhengziying78/demo-pallets-click",
-        "mutation": get_mutation("demo-pallets-click")
-    },
-    "3": {
-        "name": "demo-psf-requests",
-        "url": "https://github.com/zhengziying78/demo-psf-requests",
-        "base_branch": "main",
-        "repo_id": "zhengziying78/demo-psf-requests",
-        "mutation": get_mutation("demo-psf-requests")
-    }
-}
-
-DEFAULT_CHOICE = "1"  # demo-httpie-cli
+from known_repos import DEFAULT_REPO_NAME, REPO_OPTIONS, repo_menu_entries
 
 
 def select_repo_with_timeout():
@@ -46,13 +16,18 @@ def select_repo_with_timeout():
     
     print("Available repositories for mutation testing:")
     print()
-    for key, repo in REPO_OPTIONS.items():
-        print(f"{key}. {repo['name']}")
+    menu_entries = repo_menu_entries()
+    choice_map = {str(index): name for index, (name, _) in enumerate(menu_entries, start=1)}
+
+    for index, (name, repo) in enumerate(menu_entries, start=1):
+        print(f"{index}. {repo['name']}")
         print(f"   URL: {repo['url']}")
         print(f"   Mutation: {repo['mutation']['description']}")
         print()
     
-    print(f"Enter your choice (1-{len(REPO_OPTIONS)}) or wait 10 seconds for default (demo-httpie-cli):")
+    print(
+        f"Enter your choice (1-{len(menu_entries)}) or wait 10 seconds for default ({DEFAULT_REPO_NAME}):"
+    )
     
     # Use a queue to communicate between threads
     input_queue = Queue()
@@ -72,47 +47,33 @@ def select_repo_with_timeout():
     # Countdown with input checking
     choice = None
     for i in range(10, 0, -1):
-        print(f"\rDefaulting to demo-httpie-cli in {i} seconds... ", end='', flush=True)
+        print(f"\rDefaulting to {DEFAULT_REPO_NAME} in {i} seconds... ", end='', flush=True)
         
         # Check for input
         try:
             user_input = input_queue.get(timeout=1)
             print(f"\rUser input received: {user_input}                    ")
-            if user_input in REPO_OPTIONS:
+            if user_input in choice_map:
+                choice = choice_map[user_input]
+            elif user_input in REPO_OPTIONS:
                 choice = user_input
             elif user_input == "":
                 # Empty input (Enter pressed) means use default
-                choice = DEFAULT_CHOICE
+                choice = DEFAULT_REPO_NAME
             else:
-                choice = DEFAULT_CHOICE
+                choice = DEFAULT_REPO_NAME
             break
         except Empty:
             continue
     
     # If no input received, use default
     if choice is None:
-        print(f"\rTime's up! Using default: demo-httpie-cli                ")
-        choice = DEFAULT_CHOICE
+        print(f"\rTime's up! Using default: {DEFAULT_REPO_NAME}                ")
+        choice = DEFAULT_REPO_NAME
     
     selected_repo = REPO_OPTIONS[choice]
     print(f"\nSelected: {selected_repo['name']}")
     return selected_repo
-
-
-def get_repo_by_name(repo_name):
-    """Get repository configuration by name."""
-    # Map repo names to their keys
-    repo_name_to_key = {
-        "demo-httpie-cli": "1",
-        "demo-pallets-click": "2", 
-        "demo-psf-requests": "3"
-    }
-    
-    if repo_name in repo_name_to_key:
-        key = repo_name_to_key[repo_name]
-        return REPO_OPTIONS[key]
-    else:
-        return None
 
 
 def main():
@@ -123,7 +84,7 @@ def main():
     # Step 0: Select repository
     if len(sys.argv) > 1:
         repo_name = sys.argv[1]
-        selected_repo = get_repo_by_name(repo_name)
+        selected_repo = REPO_OPTIONS.get(repo_name)
         if selected_repo:
             print(f"Using repository from command line: {selected_repo['name']}")
         else:
