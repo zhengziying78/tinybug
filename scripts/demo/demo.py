@@ -8,12 +8,17 @@ import json
 import sys
 from pathlib import Path
 from datetime import datetime
-from github.repo_manager import RepoManager
-from github.pr_manager import PRManager
-from github.test_analyzer import TestAnalyzer
-from mutation.mutator import Mutator, MutationSpec
+from activities import (
+    analyze_test_results,
+    apply_mutation,
+    cleanup_pull_request_and_repo,
+    clone_repository,
+    commit_and_push_changes,
+    create_branch,
+    create_pull_request,
+    wait_for_checks,
+)
 from mutation.mutations import get_mutation
-from cleanup import CleanupManager
 
 
 # Configuration - repo options
@@ -155,38 +160,22 @@ This PR contains a mutation for testing purposes.
 This mutation tests whether the test suite can detect the change in {mutation_config['description'].lower()}.
 """
     
-    # Initialize managers
-    repo_manager = RepoManager()
-    cleanup_manager = CleanupManager()
-    test_analyzer = None  # Will be initialized after repo is cloned
-    
     repo_path = None
     pr_number = None
     
     try:
         # Step 1: Clone the repository
         print(f"Cloning repository: {selected_repo['url']}")
-        repo_path = repo_manager.clone_repo(selected_repo['url'])
+        repo_path = clone_repository(selected_repo['url'])
         print(f"Repository cloned to: {repo_path}")
-        
-        # Initialize test analyzer with repo path
-        test_analyzer = TestAnalyzer(repo_path=repo_path)
         
         # Step 2: Create a branch for mutation
         print(f"Creating branch: {branch_name}")
-        repo_manager.create_branch(repo_path, branch_name)
+        create_branch(repo_path, branch_name)
         
         # Step 3: Apply mutation
         print("Applying mutation...")
-        mutator = Mutator(repo_path)
-        mutation_spec = MutationSpec(
-            file_path=mutation_config["file_path"],
-            line_number=mutation_config["line_number"],
-            find_pattern=mutation_config["find_pattern"],
-            replace_pattern=mutation_config["replace_pattern"]
-        )
-        
-        mutation_applied = mutator.apply_mutation(mutation_spec)
+        mutation_applied = apply_mutation(repo_path, mutation_config)
         if mutation_applied:
             print("Mutation applied successfully")
         else:
@@ -194,24 +183,36 @@ This mutation tests whether the test suite can detect the change in {mutation_co
         
         # Step 4: Commit and push changes
         print("Committing changes...")
-        repo_manager.commit_changes(repo_path, f"Apply mutation: {mutation_config['description']}")
-        repo_manager.push_branch(repo_path, branch_name)
+        commit_and_push_changes(repo_path, branch_name, f"Apply mutation: {mutation_config['description']}")
         
         # Step 5: Create pull request
         print("Creating pull request...")
-        pr_manager = PRManager(repo_path)
-        pr_info = pr_manager.create_pull_request(pr_title, pr_body, base_branch=selected_repo['base_branch'], repo=selected_repo['repo_id'])
+        pr_info = create_pull_request(
+            repo_path,
+            pr_title,
+            pr_body,
+            base_branch=selected_repo['base_branch'],
+            repo_id=selected_repo['repo_id'],
+        )
         pr_number = pr_info["number"]
         print(f"Pull request created: {pr_info['url']}")
         
         # Step 6: Wait for and analyze test results
         print("Waiting for test results...")
-        pr_results = pr_manager.wait_for_checks(pr_number, timeout_seconds=600, repo=selected_repo['repo_id'])  # 10 minutes timeout
+        pr_results = wait_for_checks(
+            repo_path,
+            pr_number,
+            timeout_seconds=600,
+            repo_id=selected_repo['repo_id'],
+        )
         
         # Step 7: Analyze and save results
         print("Analyzing test results...")
-        analysis = test_analyzer.analyze_pr_results(pr_results, repo=selected_repo['repo_id'])
-        results_file = test_analyzer.save_results(analysis)
+        analysis, results_file = analyze_test_results(
+            repo_path,
+            pr_results,
+            repo_id=selected_repo['repo_id'],
+        )
         
         print(f"Test results saved to: {results_file}")
         print(f"Mutation testing summary:")
@@ -247,13 +248,12 @@ This mutation tests whether the test suite can detect the change in {mutation_co
     finally:
         # Step 8: Cleanup
         print("Cleaning up...")
-        if repo_path and pr_number:
-            cleanup_results = cleanup_manager.cleanup_pr_and_repo(repo_path, pr_number, selected_repo['repo_id'])
-            print(f"Cleanup results: {cleanup_results}")
-        elif repo_path:
-            # Clean up repo even if PR wasn't created
-            repo_manager.cleanup_repo(repo_path)
-            print("Repository cleaned up")
+        cleanup_results = cleanup_pull_request_and_repo(
+            repo_path,
+            pr_number=pr_number,
+            repo_id=selected_repo['repo_id'],
+        )
+        print(f"Cleanup results: {cleanup_results}")
         
         print("Demo completed!")
 
