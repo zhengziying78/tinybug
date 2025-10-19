@@ -77,6 +77,12 @@ The demo flow can also be executed via Temporal:
   python scripts/demo/start_temporal_workflow.py --repo demo-httpie-cli --wait
   ```
 
+- Use the Temporal CLI to observe workflow execution (requires `temporal` CLI):
+
+  ```bash
+  temporal workflow trace -w mutation-demo-20251018-184437
+  ```
+
 Set `--address` and `--namespace` to match your Temporal environment. The `--wait` flag waits for completion and prints the structured result.
 
 ## cleanup_github.py

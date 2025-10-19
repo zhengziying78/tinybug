@@ -13,6 +13,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
 
+from concurrent.futures import ThreadPoolExecutor
 from temporalio import activity, workflow
 from temporalio.client import Client
 from temporalio.worker import Worker
@@ -339,22 +340,27 @@ async def run_worker(
 ) -> None:
     """Connect to Temporal and start a worker for the demo workflow."""
     client = await Client.connect(temporal_address, namespace=namespace)
-    worker = Worker(
-        client,
-        task_queue=task_queue,
-        workflows=[RunSingleMutationWorkflow],
-        activities=[
-            clone_repository_activity,
-            create_branch_activity,
-            apply_mutation_activity,
-            commit_and_push_activity,
-            create_pull_request_activity,
-            wait_for_checks_activity,
-            analyze_results_activity,
-            cleanup_activity,
-        ],
-    )
-    await worker.run()
+    activity_executor = ThreadPoolExecutor()
+    try:
+        worker = Worker(
+            client,
+            task_queue=task_queue,
+            workflows=[RunSingleMutationWorkflow],
+            activities=[
+                clone_repository_activity,
+                create_branch_activity,
+                apply_mutation_activity,
+                commit_and_push_activity,
+                create_pull_request_activity,
+                wait_for_checks_activity,
+                analyze_results_activity,
+                cleanup_activity,
+            ],
+            activity_executor=activity_executor,
+        )
+        await worker.run()
+    finally:
+        activity_executor.shutdown(wait=True)
 
 
 def main() -> None:
