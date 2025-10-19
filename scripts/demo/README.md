@@ -25,7 +25,7 @@ Runs a complete mutation testing proof-of-concept demo that:
 ### Usage
 
 ```bash
-python demo.py [repo_name]
+python -m scripts.demo.demo [repo_name]
 ```
 
 **Arguments:**
@@ -40,12 +40,12 @@ If no repository is specified, an interactive menu will appear with a 10-second 
 
 ```bash
 # Run with interactive repository selection
-python demo.py
+python -m scripts.demo.demo
 
 # Run with specific repository
-python demo.py demo-httpie-cli
-python demo.py demo-pallets-click
-python demo.py demo-psf-requests
+python -m scripts.demo.demo demo-httpie-cli
+python -m scripts.demo.demo demo-pallets-click
+python -m scripts.demo.demo demo-psf-requests
 ```
 
 ### What it does
