@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import traceback
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
 
@@ -21,6 +22,38 @@ from activities import (
     create_pull_request,
     wait_for_checks,
 )
+
+
+def build_pr_body(mutation_config: Mapping[str, Any]) -> str:
+    """Construct the pull request body for a mutation."""
+    return f"""
+This PR contains a mutation for testing purposes.
+
+**Mutation Details:**
+- File: {mutation_config['file_path']}
+- Line: {mutation_config['line_number']}
+- Change: `{mutation_config['find_pattern']}` → `{mutation_config['replace_pattern']}`
+
+This mutation tests whether the test suite can detect the change in {mutation_config['description'].lower()}.
+"""
+
+
+def generate_mutation_metadata(
+    mutation_config: Mapping[str, Any],
+    *,
+    timestamp: Optional[str] = None,
+) -> Dict[str, str]:
+    """Generate branch name and PR details for a mutation run."""
+    run_timestamp = timestamp or datetime.now().strftime("%Y%m%d-%H%M%S")
+    branch_name = f"mutation-test-demo-{run_timestamp}"
+    pr_title = f"Mutation Test: {mutation_config['description']} ({run_timestamp})"
+    pr_body = build_pr_body(mutation_config)
+    return {
+        "timestamp": run_timestamp,
+        "branch_name": branch_name,
+        "pr_title": pr_title,
+        "pr_body": pr_body,
+    }
 
 
 @dataclass
@@ -67,12 +100,10 @@ class MutationFlowResult:
 def run_single_mutation_flow(
     repo_config: Mapping[str, Any],
     *,
-    branch_name: str,
-    pr_title: str,
-    pr_body: str,
     timeout_seconds: int = 600,
     output_dir: Optional[Path] = None,
     base_clone_dir: Optional[str] = None,
+    timestamp: Optional[str] = None,
 ) -> MutationFlowResult:
     """
     Execute the single-mutation demo workflow and return structured results.
@@ -83,12 +114,10 @@ def run_single_mutation_flow(
             - base_branch: base branch name
             - repo_id: GitHub owner/repo identifier
             - mutation: mutation configuration dict
-        branch_name: Name of the branch used for the mutation.
-        pr_title: Title for the demo pull request.
-        pr_body: Body content for the demo pull request.
         timeout_seconds: Max time to wait for GitHub checks (default 10 minutes).
         output_dir: Optional directory for persisting analysis results.
         base_clone_dir: Optional base directory for cloning repositories.
+        timestamp: Optional timestamp override used for naming artifacts.
 
     Returns:
         MutationFlowResult encapsulating the outcome of the run.
@@ -98,6 +127,11 @@ def run_single_mutation_flow(
     repo_url = repo_config["url"]
     repo_id = repo_config.get("repo_id")
 
+    mutation_metadata = generate_mutation_metadata(mutation_config, timestamp=timestamp)
+    branch_name = mutation_metadata["branch_name"]
+    pr_title = mutation_metadata["pr_title"]
+    pr_body = mutation_metadata["pr_body"]
+
     result = MutationFlowResult(
         repo_url=repo_url,
         branch_name=branch_name,
@@ -106,6 +140,7 @@ def run_single_mutation_flow(
         metadata={
             "repo_id": repo_id,
             "base_branch": base_branch,
+            "timestamp": mutation_metadata["timestamp"],
         },
     )
 

@@ -11,21 +11,8 @@ from typing import Optional
 from temporalio.client import Client
 
 from demo import get_repo_by_name
-from flow import MutationFlowResult
+from flow import MutationFlowResult, generate_mutation_metadata
 from temporal_worker import MutationWorkflowParams, RunSingleMutationWorkflow
-
-
-def _build_pr_body(mutation_config: dict) -> str:
-    return f"""
-This PR contains a mutation for testing purposes.
-
-**Mutation Details:**
-- File: {mutation_config['file_path']}
-- Line: {mutation_config['line_number']}
-- Change: `{mutation_config['find_pattern']}` → `{mutation_config['replace_pattern']}`
-
-This mutation tests whether the test suite can detect the change in {mutation_config['description'].lower()}.
-"""
 
 
 async def start_workflow(
@@ -47,18 +34,14 @@ async def start_workflow(
 
     mutation_config = repo_config["mutation"]
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    branch_name = f"mutation-test-demo-{timestamp}"
-    pr_title = f"Mutation Test: {mutation_config['description']} ({timestamp})"
-    pr_body = _build_pr_body(mutation_config)
+    mutation_metadata = generate_mutation_metadata(mutation_config, timestamp=timestamp)
 
     params = MutationWorkflowParams(
         repo_config=repo_config,
-        branch_name=branch_name,
-        pr_title=pr_title,
-        pr_body=pr_body,
         timeout_seconds=timeout_seconds,
         output_dir=output_dir,
         base_clone_dir=base_clone_dir,
+        timestamp=timestamp,
     )
 
     client = await Client.connect(address, namespace=namespace)
@@ -77,13 +60,21 @@ async def start_workflow(
         print(result.to_dict())
         return result
 
-    return MutationFlowResult(
+    interim_result = MutationFlowResult(
         repo_url=repo_config["url"],
-        branch_name=branch_name,
-        pr_title=pr_title,
+        branch_name=mutation_metadata["branch_name"],
+        pr_title=mutation_metadata["pr_title"],
         mutation_description=mutation_config["description"],
-        metadata={"workflow_id": handle.id, "run_id": handle.run_id},
+        metadata={
+            "workflow_id": handle.id,
+            "run_id": handle.run_id,
+            "timestamp": mutation_metadata["timestamp"],
+        },
     )
+    print("Workflow started. Expected branch/PR names:")
+    print(f"  - Branch: {interim_result.branch_name}")
+    print(f"  - PR Title: {interim_result.pr_title}")
+    return interim_result
 
 
 def parse_args() -> argparse.Namespace:

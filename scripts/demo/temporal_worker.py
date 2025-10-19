@@ -27,7 +27,7 @@ from activities import (
     create_pull_request,
     wait_for_checks,
 )
-from flow import MutationFlowResult
+from flow import MutationFlowResult, generate_mutation_metadata
 
 
 # ---------------------------------------------------------------------------
@@ -96,12 +96,10 @@ class MutationWorkflowParams:
     """Parameters supplied when starting the Temporal workflow."""
 
     repo_config: Mapping[str, Any]
-    branch_name: str
-    pr_title: str
-    pr_body: str
     timeout_seconds: int = 600
     output_dir: Optional[str] = None
     base_clone_dir: Optional[str] = None
+    timestamp: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -204,14 +202,25 @@ class RunSingleMutationWorkflow:
         mutation_config = repo_config["mutation"]
         repo_id = repo_config.get("repo_id")
 
+        # Generate branch and PR metadata deterministically
+        if params.timestamp:
+            timestamp = params.timestamp
+        else:
+            timestamp = workflow.now().strftime("%Y%m%d-%H%M%S")
+        mutation_metadata = generate_mutation_metadata(mutation_config, timestamp=timestamp)
+        branch_name = mutation_metadata["branch_name"]
+        pr_title = mutation_metadata["pr_title"]
+        pr_body = mutation_metadata["pr_body"]
+
         result = MutationFlowResult(
             repo_url=repo_config["url"],
-            branch_name=params.branch_name,
-            pr_title=params.pr_title,
+            branch_name=branch_name,
+            pr_title=pr_title,
             mutation_description=mutation_config["description"],
             metadata={
                 "repo_id": repo_id,
                 "base_branch": repo_config["base_branch"],
+                "timestamp": mutation_metadata["timestamp"],
             },
         )
 
@@ -232,10 +241,10 @@ class RunSingleMutationWorkflow:
 
             await workflow.execute_activity(
                 create_branch_activity,
-                CreateBranchInput(repo_path=repo_path, branch_name=params.branch_name),
+                CreateBranchInput(repo_path=repo_path, branch_name=branch_name),
                 schedule_to_close_timeout=timedelta(minutes=2),
             )
-            workflow.logger.info("Branch %s created", params.branch_name)
+            workflow.logger.info("Branch %s created", branch_name)
 
             mutation_applied = await workflow.execute_activity(
                 apply_mutation_activity,
@@ -249,7 +258,7 @@ class RunSingleMutationWorkflow:
                 commit_and_push_activity,
                 CommitAndPushInput(
                     repo_path=repo_path,
-                    branch_name=params.branch_name,
+                    branch_name=branch_name,
                     commit_message=f"Apply mutation: {mutation_config['description']}",
                 ),
                 schedule_to_close_timeout=timedelta(minutes=3),
@@ -260,8 +269,8 @@ class RunSingleMutationWorkflow:
                 create_pull_request_activity,
                 CreatePullRequestInput(
                     repo_path=repo_path,
-                    title=params.pr_title,
-                    body=params.pr_body,
+                    title=pr_title,
+                    body=pr_body,
                     base_branch=repo_config["base_branch"],
                     repo_id=repo_id,
                 ),
