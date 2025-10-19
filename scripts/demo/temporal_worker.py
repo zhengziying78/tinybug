@@ -18,6 +18,8 @@ from temporalio import activity, workflow
 from temporalio.client import Client
 from temporalio.worker import Worker
 
+from storage import persist_flow_result
+
 from activities import (
     analyze_test_results,
     apply_mutation,
@@ -93,6 +95,12 @@ class CleanupInput:
 
 
 @dataclass
+class PersistResultInput:
+    result_data: Dict[str, Any]
+    summary_output_dir: Optional[str] = None
+
+
+@dataclass
 class MutationWorkflowParams:
     """Parameters supplied when starting the Temporal workflow."""
 
@@ -101,6 +109,7 @@ class MutationWorkflowParams:
     output_dir: Optional[str] = None
     base_clone_dir: Optional[str] = None
     timestamp: Optional[str] = None
+    summary_output_dir: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -187,6 +196,14 @@ def cleanup_activity(payload: CleanupInput) -> Dict[str, Any]:
         pr_number=payload.pr_number,
         repo_id=payload.repo_id,
     )
+
+
+@activity.defn
+def persist_result_activity(payload: PersistResultInput) -> str:
+    """Persist the workflow result summary to disk."""
+    output_path = persist_flow_result(payload.result_data, payload.summary_output_dir)
+    activity.logger.info("Result summary stored at %s", output_path)
+    return str(output_path)
 
 
 # ---------------------------------------------------------------------------
@@ -325,6 +342,21 @@ class RunSingleMutationWorkflow:
             result.cleanup_details = cleanup_details
             workflow.logger.info("Cleanup completed: %s", cleanup_details)
 
+            try:
+                summary_path = await workflow.execute_activity(
+                    persist_result_activity,
+                    PersistResultInput(
+                        result_data=result.to_dict(),
+                        summary_output_dir=params.summary_output_dir,
+                    ),
+                    schedule_to_close_timeout=timedelta(minutes=2),
+                )
+                result.summary_file = summary_path
+                result.metadata["summary_file"] = summary_path
+                workflow.logger.info("Result summary saved to %s", summary_path)
+            except Exception as persist_exc:
+                workflow.logger.error("Failed to persist result summary: %s", persist_exc)
+
         return result
 
 
@@ -355,6 +387,7 @@ async def run_worker(
                 wait_for_checks_activity,
                 analyze_results_activity,
                 cleanup_activity,
+                persist_result_activity,
             ],
             activity_executor=activity_executor,
         )

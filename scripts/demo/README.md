@@ -59,7 +59,7 @@ The script performs these steps:
 7. **Analyze Results** - Determines if the mutation was "killed" by tests
 8. **Cleanup** - Removes the repository and closes the PR
 
-Results are saved to a timestamped JSON file in the current directory.
+Results are saved to a timestamped JSON file in the `mutation_results/` directory (created in your current working directory).
 
 ## Temporal Worker & Workflow
 
@@ -82,6 +82,8 @@ The demo flow can also be executed via Temporal:
   ```bash
   temporal workflow trace -w mutation-demo-20251018-184437
   ```
+
+- Mutation summaries are written to the `mutation_results/` directory by default. Override the location with `--summary-dir` when launching the workflow or rely on the default directory.
 
 Set `--address` and `--namespace` to match your Temporal environment. The `--wait` flag waits for completion and prints the structured result.
 
