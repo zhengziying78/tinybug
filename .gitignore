@@ -77,3 +77,6 @@ logs/
 
 # AI agent local configuration
 .claude/
+
+# Demo workflow artifacts
+mutation_results/

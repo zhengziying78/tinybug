@@ -4,7 +4,7 @@ Pull request management functionality for mutation testing PoC.
 import subprocess
 import json
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from .check_utils import CheckProcessor
 
 

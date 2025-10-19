@@ -12,7 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
 
-from workflow.activities import (
+from scripts.demo.workflow.activities import (
     analyze_test_results,
     apply_mutation,
     cleanup_pull_request_and_repo,
@@ -22,7 +22,7 @@ from workflow.activities import (
     create_pull_request,
     wait_for_checks,
 )
-from workflow.storage import persist_flow_result
+from scripts.demo.workflow.storage import persist_flow_result
 
 
 def build_pr_body(mutation_config: Mapping[str, Any]) -> str:

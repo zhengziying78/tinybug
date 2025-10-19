@@ -18,9 +18,8 @@ from temporalio import activity, workflow
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from workflow.storage import persist_flow_result
-
-from workflow.activities import (
+from scripts.demo.workflow.storage import persist_flow_result
+from scripts.demo.workflow.activities import (
     analyze_test_results,
     apply_mutation,
     cleanup_pull_request_and_repo,
@@ -30,7 +29,7 @@ from workflow.activities import (
     create_pull_request,
     wait_for_checks,
 )
-from workflow.flow import MutationFlowResult, generate_mutation_metadata
+from scripts.demo.workflow.flow import MutationFlowResult, generate_mutation_metadata
 
 
 # ---------------------------------------------------------------------------

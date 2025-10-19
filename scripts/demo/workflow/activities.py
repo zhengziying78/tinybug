@@ -10,11 +10,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional, Tuple
 
-from cleanup import CleanupManager
-from github.pr_manager import PRManager
-from github.repo_manager import RepoManager
-from github.test_analyzer import TestAnalyzer
-from mutation.mutator import Mutator, MutationSpec
+from scripts.demo.workflow.cleanup import CleanupManager
+from scripts.demo.github.pr_manager import PRManager
+from scripts.demo.github.repo_manager import RepoManager
+from scripts.demo.github.test_analyzer import TestAnalyzer
+from scripts.demo.mutation.mutator import Mutator, MutationSpec
 
 
 def clone_repository(repo_url: str, base_dir: Optional[str] = None) -> Path:

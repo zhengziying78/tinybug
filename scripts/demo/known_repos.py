@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Iterable, List, Tuple
 
-from mutation.mutations import get_mutation
+from scripts.demo.mutation.mutations import get_mutation
 
 # Repository configuration keyed by canonical repo name.
 KNOWN_REPOS: Dict[str, Dict[str, Any]] = {
