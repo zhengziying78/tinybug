@@ -8,17 +8,8 @@ import json
 import sys
 from pathlib import Path
 from datetime import datetime
-from activities import (
-    analyze_test_results,
-    apply_mutation,
-    cleanup_pull_request_and_repo,
-    clone_repository,
-    commit_and_push_changes,
-    create_branch,
-    create_pull_request,
-    wait_for_checks,
-)
 from mutation.mutations import get_mutation
+from flow import run_single_mutation_flow
 
 
 # Configuration - repo options
@@ -160,73 +151,34 @@ This PR contains a mutation for testing purposes.
 This mutation tests whether the test suite can detect the change in {mutation_config['description'].lower()}.
 """
     
-    repo_path = None
-    pr_number = None
+    result = run_single_mutation_flow(
+        selected_repo,
+        branch_name=branch_name,
+        pr_title=pr_title,
+        pr_body=pr_body,
+        timeout_seconds=600,
+    )
     
-    try:
-        # Step 1: Clone the repository
-        print(f"Cloning repository: {selected_repo['url']}")
-        repo_path = clone_repository(selected_repo['url'])
-        print(f"Repository cloned to: {repo_path}")
+    print()
+    print("Mutation testing summary:")
+    print(f"  - Repository: {selected_repo['url']}")
+    print(f"  - Branch: {branch_name}")
+    print(f"  - Pull request: {result.pr_url or 'N/A'}")
+    print(f"  - Mutation applied: {result.mutation_applied}")
+    
+    if result.analysis:
+        summary = result.analysis.get('summary', {})
+        print(f"  - Total checks: {summary.get('total_checks', 0)}")
+        print(f"  - Passed checks: {summary.get('passed_checks', 0)}")
+        print(f"  - Failed checks: {summary.get('failed_checks', 0)}")
+        print(f"  - Mutation killed: {summary.get('mutation_killed', False)}")
+        print(f"  - Mutation survived: {summary.get('mutation_survived', False)}")
+        print(f"  - Results file: {result.results_file}")
         
-        # Step 2: Create a branch for mutation
-        print(f"Creating branch: {branch_name}")
-        create_branch(repo_path, branch_name)
-        
-        # Step 3: Apply mutation
-        print("Applying mutation...")
-        mutation_applied = apply_mutation(repo_path, mutation_config)
-        if mutation_applied:
-            print("Mutation applied successfully")
-        else:
-            print("Warning: No changes made during mutation")
-        
-        # Step 4: Commit and push changes
-        print("Committing changes...")
-        commit_and_push_changes(repo_path, branch_name, f"Apply mutation: {mutation_config['description']}")
-        
-        # Step 5: Create pull request
-        print("Creating pull request...")
-        pr_info = create_pull_request(
-            repo_path,
-            pr_title,
-            pr_body,
-            base_branch=selected_repo['base_branch'],
-            repo_id=selected_repo['repo_id'],
-        )
-        pr_number = pr_info["number"]
-        print(f"Pull request created: {pr_info['url']}")
-        
-        # Step 6: Wait for and analyze test results
-        print("Waiting for test results...")
-        pr_results = wait_for_checks(
-            repo_path,
-            pr_number,
-            timeout_seconds=600,
-            repo_id=selected_repo['repo_id'],
-        )
-        
-        # Step 7: Analyze and save results
-        print("Analyzing test results...")
-        analysis, results_file = analyze_test_results(
-            repo_path,
-            pr_results,
-            repo_id=selected_repo['repo_id'],
-        )
-        
-        print(f"Test results saved to: {results_file}")
-        print(f"Mutation testing summary:")
-        print(f"  - Total checks: {analysis['summary']['total_checks']}")
-        print(f"  - Passed checks: {analysis['summary']['passed_checks']}")
-        print(f"  - Failed checks: {analysis['summary']['failed_checks']}")
-        print(f"  - Mutation killed: {analysis['summary']['mutation_killed']}")
-        print(f"  - Mutation survived: {analysis['summary']['mutation_survived']}")
-        
-        # Display detailed failure information
-        if analysis['test_failures']:
+        if result.analysis.get('test_failures'):
             print()
             print("Detailed failure information:")
-            for failure in analysis['test_failures']:
+            for failure in result.analysis['test_failures']:
                 check_name = failure.get('check_name', 'Unknown')
                 failure_reason = failure.get('failure_reason', 'due to unknown reasons')
                 failed_tests = failure.get('failed_tests', [])
@@ -238,24 +190,19 @@ This mutation tests whether the test suite can detect the change in {mutation_co
                     for test in failed_tests:
                         print(f"      - {test}")
                 print()
-        
-    except Exception as e:
-        import traceback
-        print(f"Error during execution: {str(e)}")
-        print("Full traceback:")
-        traceback.print_exc()
-        
-    finally:
-        # Step 8: Cleanup
-        print("Cleaning up...")
-        cleanup_results = cleanup_pull_request_and_repo(
-            repo_path,
-            pr_number=pr_number,
-            repo_id=selected_repo['repo_id'],
-        )
-        print(f"Cleanup results: {cleanup_results}")
-        
-        print("Demo completed!")
+    else:
+        print("  - No analysis available")
+    
+    if result.error:
+        print()
+        print("Errors encountered during workflow:")
+        print(f"  - {result.error}")
+        if result.traceback:
+            print(result.traceback)
+    
+    print()
+    print(f"Cleanup results: {result.cleanup_details}")
+    print("Demo completed!")
 
 
 if __name__ == "__main__":
