@@ -16,6 +16,7 @@ from scripts.demo.workflow.temporal_worker import (
     MutationWorkflowParams,
     RunSingleMutationWorkflow,
 )
+from scripts.demo.workflow.summary import render_summary_lines
 
 
 async def start_workflow(
@@ -62,7 +63,8 @@ async def start_workflow(
     if wait_for_result:
         result = await handle.result()
         print("Workflow completed.")
-        print(result.to_dict())
+        for line in render_summary_lines(repo_config, result):
+            print(line)
         return result
 
     interim_result = MutationFlowResult(

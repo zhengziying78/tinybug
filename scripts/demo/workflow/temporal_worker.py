@@ -30,6 +30,7 @@ from scripts.demo.workflow.activities import (
     wait_for_checks,
 )
 from scripts.demo.workflow.flow import MutationFlowResult, generate_mutation_metadata
+from scripts.demo.workflow.summary import render_summary_lines
 
 
 # ---------------------------------------------------------------------------
@@ -355,6 +356,9 @@ class RunSingleMutationWorkflow:
                 workflow.logger.info("Result summary saved to %s", summary_path)
             except Exception as persist_exc:
                 workflow.logger.error("Failed to persist result summary: %s", persist_exc)
+
+        for line in render_summary_lines(repo_config, result):
+            workflow.logger.info(line)
 
         return result
 
