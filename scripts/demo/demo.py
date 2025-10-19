@@ -5,8 +5,8 @@ Usage: python demo.py [repo_name]
   repo_name: demo-httpie-cli, demo-pallets-click, or demo-psf-requests
 """
 import sys
-from workflow.flow import run_single_mutation_flow
-from known_repos import DEFAULT_REPO_NAME, KNOWN_REPOS, repo_menu_entries
+from scripts.demo.workflow.flow import run_single_mutation_flow
+from scripts.demo.known_repos import DEFAULT_REPO_NAME, KNOWN_REPOS, repo_menu_entries
 
 
 def select_repo_with_timeout():
