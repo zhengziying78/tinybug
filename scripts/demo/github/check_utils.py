@@ -2,7 +2,6 @@
 Shared utilities for processing GitHub check results.
 """
 import subprocess
-import json
 import re
 from typing import Dict, Any, List, Optional
 

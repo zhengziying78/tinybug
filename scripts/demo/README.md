@@ -69,13 +69,13 @@ The demo flow can also be executed via Temporal:
 - `workflow/temporal_worker.py` registers activities and the `RunSingleMutationWorkflow` that mirrors the demo steps. Run it as a worker:
 
   ```bash
-  python scripts/demo/workflow/temporal_worker.py --task-queue mutation-demo-task-queue
+  python -m scripts.demo.workflow.temporal_worker --task-queue mutation-demo-task-queue
   ```
 
 - `workflow/start_temporal_workflow.py` connects to Temporal and starts the workflow:
 
   ```bash
-  python scripts/demo/workflow/start_temporal_workflow.py --repo demo-httpie-cli --wait
+  python -m scripts.demo.workflow.start_temporal_workflow --repo demo-httpie-cli --wait
   ```
 
 - Use the Temporal CLI to observe workflow execution (requires `temporal` CLI):
