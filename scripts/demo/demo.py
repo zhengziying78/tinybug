@@ -76,12 +76,56 @@ def select_repo_with_timeout():
     return selected_repo
 
 
+def print_mutation_summary(selected_repo, result):
+    """Print summary information for the mutation testing run."""
+    print()
+    print("Mutation testing summary:")
+    print(f"  - Repository: {selected_repo['url']}")
+    print(f"  - Branch: {result.branch_name}")
+    print(f"  - Pull request: {result.pr_url or 'N/A'}")
+    print(f"  - Mutation applied: {result.mutation_applied}")
+
+    if result.analysis:
+        summary = result.analysis.get('summary', {})
+        print(f"  - Total checks: {summary.get('total_checks', 0)}")
+        print(f"  - Passed checks: {summary.get('passed_checks', 0)}")
+        print(f"  - Failed checks: {summary.get('failed_checks', 0)}")
+        print(f"  - Mutation killed: {summary.get('mutation_killed', False)}")
+        print(f"  - Mutation survived: {summary.get('mutation_survived', False)}")
+        print(f"  - Results file: {result.results_file}")
+
+        if result.analysis.get('test_failures'):
+            print()
+            print("Detailed failure information:")
+            for failure in result.analysis['test_failures']:
+                check_name = failure.get('check_name', 'Unknown')
+                failure_reason = failure.get('failure_reason', 'due to unknown reasons')
+                failed_tests = failure.get('failed_tests', [])
+
+                print(f"  • {check_name}: {failure_reason}")
+
+                if failed_tests:
+                    print("    Failed tests:")
+                    for test in failed_tests:
+                        print(f"      - {test}")
+                print()
+    else:
+        print("  - No analysis available")
+
+    if result.error:
+        print()
+        print("Errors encountered during workflow:")
+        print(f"  - {result.error}")
+        if result.traceback:
+            print(result.traceback)
+
+
 def main():
     """Main function to run the mutation testing demo."""
     print("Starting mutation testing PoC demo...")
     print()
     
-    # Step 0: Select repository
+    # Select repository
     if len(sys.argv) > 1:
         repo_name = sys.argv[1]
         selected_repo = KNOWN_REPOS.get(repo_name)
@@ -102,46 +146,7 @@ def main():
         timeout_seconds=600,
     )
     
-    print()
-    print("Mutation testing summary:")
-    print(f"  - Repository: {selected_repo['url']}")
-    print(f"  - Branch: {result.branch_name}")
-    print(f"  - Pull request: {result.pr_url or 'N/A'}")
-    print(f"  - Mutation applied: {result.mutation_applied}")
-    
-    if result.analysis:
-        summary = result.analysis.get('summary', {})
-        print(f"  - Total checks: {summary.get('total_checks', 0)}")
-        print(f"  - Passed checks: {summary.get('passed_checks', 0)}")
-        print(f"  - Failed checks: {summary.get('failed_checks', 0)}")
-        print(f"  - Mutation killed: {summary.get('mutation_killed', False)}")
-        print(f"  - Mutation survived: {summary.get('mutation_survived', False)}")
-        print(f"  - Results file: {result.results_file}")
-        
-        if result.analysis.get('test_failures'):
-            print()
-            print("Detailed failure information:")
-            for failure in result.analysis['test_failures']:
-                check_name = failure.get('check_name', 'Unknown')
-                failure_reason = failure.get('failure_reason', 'due to unknown reasons')
-                failed_tests = failure.get('failed_tests', [])
-                
-                print(f"  • {check_name}: {failure_reason}")
-                
-                if failed_tests:
-                    print("    Failed tests:")
-                    for test in failed_tests:
-                        print(f"      - {test}")
-                print()
-    else:
-        print("  - No analysis available")
-    
-    if result.error:
-        print()
-        print("Errors encountered during workflow:")
-        print(f"  - {result.error}")
-        if result.traceback:
-            print(result.traceback)
+    print_mutation_summary(selected_repo, result)
     
     print()
     print(f"Cleanup results: {result.cleanup_details}")
