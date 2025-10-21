@@ -5,12 +5,15 @@ This directory contains scripts for running mutation testing demos and managing 
 ## Files
 
 - `demo.py` - Main mutation testing demo script
-- `activities.py` - Idempotent helpers for cloning, mutating, testing, and cleanup
-- `workflow/activities.py` - Idempotent helpers for cloning, mutating, testing, and cleanup
-- `workflow/flow.py` - Orchestrator that stitches helpers together and returns structured results
-- `workflow/temporal_worker.py` - Temporal activities, workflow definition, and worker runner
-- `workflow/start_temporal_workflow.py` - CLI to launch the Temporal workflow
+- `activities.py` - Backwards-compatible shim for workflow helpers (real code in `temporal/workflows/activities.py`)
+- `workflow/flow.py` - Demo runner that now consumes the production-ready helpers under `temporal/workflows/`
+- `workflow/temporal_worker.py` - Shim that forwards to `temporal/workflows/temporal_worker.py`
+- `workflow/start_temporal_workflow.py` - Shim that forwards to `temporal/workflows/start_temporal_workflow.py`
 - `cleanup_github.py` - Utility to clean up open pull requests in demo repositories
+
+> **Note:** The reusable GitHub and Temporal workflow implementations have moved to
+> `temporal/github/` and `temporal/workflows/`. The wrappers in `scripts/demo/`
+> are kept only so existing demo commands continue to work unchanged.
 
 ## demo.py
 
