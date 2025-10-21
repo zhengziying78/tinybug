@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuite name="pytest" tests="2" failures="1" errors="0" skipped="0" time="0.123">
+  <testcase classname="tests.test_example" name="test_pass" time="0.01"/>
+  <testcase classname="tests.test_example" name="test_fail" time="0.02">
+    <failure message="assert 1 == 2">AssertionError: assert 1 == 2</failure>
+  </testcase>
+</testsuite>
