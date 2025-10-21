@@ -14,7 +14,8 @@ from temporal.workflows.cleanup import CleanupManager
 from temporal.github.pr_manager import PRManager
 from temporal.github.repo_manager import RepoManager
 from temporal.github.test_analyzer import TestAnalyzer
-from scripts.demo.mutation.mutator import Mutator, MutationSpec
+from mutators.mutator import Mutator
+from models.mutation import MutationSpec
 
 
 def clone_repository(repo_url: str, base_dir: Optional[str] = None) -> Path:

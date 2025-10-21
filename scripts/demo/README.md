@@ -4,8 +4,7 @@ This directory contains scripts for running mutation testing demos and managing 
 
 ## Files
 
-- `demo.py` - Main mutation testing demo script
-- `workflow/flow.py` - Demo runner that consumes the production-ready helpers under `temporal/workflows/`
+- `demo.py` - Main mutation testing demo script (includes the single-mutation workflow runner)
 - `cleanup_github.py` - Utility to clean up open pull requests in demo repositories
 
 ## demo.py
