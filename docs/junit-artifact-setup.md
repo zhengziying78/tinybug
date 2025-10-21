@@ -38,3 +38,13 @@ After pushing the changes, open the workflow run in the **Actions** tab. Under t
 <img width="1787" height="943" alt="image" src="https://github.com/user-attachments/assets/96fb8b50-44eb-434d-9d91-5f60ad3724bb" />
 
 Once the artifact is available, automation (e.g., Temporal workflows) can fetch and parse `junit.xml` instead of scraping raw logs.
+
+## 4. Analyzer integration
+
+The Temporal demo’s analyzer now prefers these artifacts when reporting failures:
+
+- If at least one junit artifact is present, the analyzer parses every `<testcase>` entry and records the per-test outcome, duration, and failure message.
+- The workflow summary surfaces the collected tests, a pass/fail/error breakdown, and highlights failing test ids (for example `tests.test_example::test_fail`).
+- When the artifact is missing or unreadable, the analyzer gracefully falls back to the existing log scraping logic so older repos continue to work.
+
+Verify the artifact name and XML location match the analyzer configuration (default expectation: an artifact similar to `pytest-junit` containing `junit.xml`). If the summary indicates “failed logs only” instead of junit data, confirm the upload step ran (check the Actions run logs) and that `actions/upload-artifact` found the XML file.
