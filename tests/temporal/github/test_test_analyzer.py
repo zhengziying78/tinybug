@@ -3,8 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 from unittest import mock
 
-import pytest
-
 from temporal.github.artifact_utils import ArtifactDownload
 from temporal.github.check_utils import CheckProcessor
 from temporal.github.test_analyzer import TestAnalyzer
@@ -70,9 +68,17 @@ def test_analyzer_prefers_junit_artifacts(tmp_path: Path) -> None:
 
     assert failure["failure_reason"] == "due to 1 failed test case(s)"
     assert failure["failed_tests"] == ["tests.test_example::test_fail"]
-    assert failure["tests_summary"] == {"total": 2, "passed": 1, "failed": 1, "errors": 0, "skipped": 0}
+    assert failure["tests_summary"] == {
+        "total": 2,
+        "passed": 1,
+        "failed": 1,
+        "errors": 0,
+        "skipped": 0,
+    }
     assert failure["log_available"] is False
-    assert failure["junit_artifacts"] == [{"artifact": "pytest-junit", "files": [JUNIT_FIXTURE.name]}]
+    assert failure["junit_artifacts"] == [
+        {"artifact": "pytest-junit", "files": [JUNIT_FIXTURE.name]}
+    ]
 
 
 def test_analyzer_falls_back_to_logs_when_no_artifacts(tmp_path: Path) -> None:
