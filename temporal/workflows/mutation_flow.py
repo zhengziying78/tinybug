@@ -3,7 +3,7 @@ Reusable mutation workflow structures shared across Temporal orchestrations.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any, Dict, Mapping, Optional
 
@@ -40,9 +40,9 @@ def generate_mutation_metadata(
     }
 
 
-@dataclass
-class MutationFlowResult:
-    """Structured result emitted by the single-mutation workflow."""
+@dataclass(frozen=True)
+class MutationContext:
+    """Static context describing the mutation run."""
 
     repo_url: str
     branch_name: str
@@ -50,41 +50,57 @@ class MutationFlowResult:
     mutation_description: str
     pr_number: Optional[str] = None
     pr_url: Optional[str] = None
+    repo_id: Optional[str] = None
+    base_branch: Optional[str] = None
+    timestamp: Optional[str] = None
+
+
+@dataclass
+class MutationResult:
+    """Outcome of executing the mutation run."""
+
+    pr_number: Optional[str] = None
+    pr_url: Optional[str] = None
     mutation_applied: bool = False
     analysis: Optional[Dict[str, Any]] = None
     results_file: Optional[str] = None
-    pr_results: Optional[Dict[str, Any]] = None
-    cleanup_details: Optional[Dict[str, Any]] = None
     summary_file: Optional[str] = None
+    pr_results: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
     traceback: Optional[str] = None
+
+
+@dataclass
+class WorkflowMutationRun:
+    """Workflow-scoped metadata captured alongside the mutation results."""
+
     repo_path: Optional[str] = None
+    cleanup_details: Optional[Dict[str, Any]] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class MutationFlowResult:
+    """Structured result emitted by the single-mutation workflow."""
+
+    context: MutationContext
+    outcome: MutationResult
+    workflow: WorkflowMutationRun = field(default_factory=WorkflowMutationRun)
 
     def to_dict(self) -> Dict[str, Any]:
         """Return a JSON-serializable representation of the run."""
         return {
-            "repo_url": self.repo_url,
-            "branch_name": self.branch_name,
-            "pr_title": self.pr_title,
-            "mutation_description": self.mutation_description,
-            "pr_number": self.pr_number,
-            "pr_url": self.pr_url,
-            "mutation_applied": self.mutation_applied,
-            "analysis": self.analysis,
-            "results_file": self.results_file,
-            "summary_file": self.summary_file,
-            "pr_results": self.pr_results,
-            "cleanup_details": self.cleanup_details,
-            "error": self.error,
-            "traceback": self.traceback,
-            "repo_path": self.repo_path,
-            "metadata": self.metadata,
+            "context": asdict(self.context),
+            "outcome": asdict(self.outcome),
+            "workflow": asdict(self.workflow),
         }
 
 
 __all__ = [
+    "MutationContext",
+    "MutationResult",
+    "WorkflowMutationRun",
+    "MutationFlowResult",
     "build_pr_body",
     "generate_mutation_metadata",
-    "MutationFlowResult",
 ]

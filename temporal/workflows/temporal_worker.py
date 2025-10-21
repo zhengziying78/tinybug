@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import traceback
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import timedelta
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
@@ -29,7 +29,13 @@ from temporal.workflows.activities import (
     create_pull_request,
     wait_for_checks,
 )
-from temporal.workflows.mutation_flow import MutationFlowResult, generate_mutation_metadata
+from temporal.workflows.mutation_flow import (
+    MutationContext,
+    MutationFlowResult,
+    MutationResult,
+    WorkflowMutationRun,
+    generate_mutation_metadata,
+)
 from temporal.workflows.summary import render_summary_lines
 from temporal.mutation.mutations import get_mutation
 
@@ -235,16 +241,19 @@ class RunSingleMutationWorkflow:
         pr_title = mutation_metadata["pr_title"]
         pr_body = mutation_metadata["pr_body"]
 
-        result = MutationFlowResult(
+        context = MutationContext(
             repo_url=repo_config["url"],
             branch_name=branch_name,
             pr_title=pr_title,
             mutation_description=mutation_config["description"],
-            metadata={
-                "repo_id": repo_id,
-                "base_branch": repo_config["base_branch"],
-                "timestamp": mutation_metadata["timestamp"],
-            },
+            repo_id=repo_id,
+            base_branch=repo_config["base_branch"],
+            timestamp=mutation_metadata["timestamp"],
+        )
+        result = MutationFlowResult(
+            context=context,
+            outcome=MutationResult(),
+            workflow=WorkflowMutationRun(),
         )
 
         repo_path: Optional[str] = None
@@ -259,7 +268,7 @@ class RunSingleMutationWorkflow:
                 ),
                 schedule_to_close_timeout=timedelta(minutes=5),
             )
-            result.repo_path = repo_path
+            result.workflow.repo_path = repo_path
             workflow.logger.info("Repository cloned to %s", repo_path)
 
             await workflow.execute_activity(
@@ -274,7 +283,7 @@ class RunSingleMutationWorkflow:
                 ApplyMutationInput(repo_path=repo_path, mutation_config=mutation_config),
                 schedule_to_close_timeout=timedelta(minutes=2),
             )
-            result.mutation_applied = mutation_applied
+            result.outcome.mutation_applied = mutation_applied
             workflow.logger.info("Mutation applied: %s", mutation_applied)
 
             await workflow.execute_activity(
@@ -300,9 +309,11 @@ class RunSingleMutationWorkflow:
                 schedule_to_close_timeout=timedelta(minutes=3),
             )
             pr_number = pr_info["number"]
-            result.pr_number = pr_number
-            result.pr_url = pr_info.get("url")
-            workflow.logger.info("Pull request created: %s", result.pr_url)
+            pr_url = pr_info.get("url")
+            result.context = replace(result.context, pr_number=pr_number, pr_url=pr_url)
+            result.outcome.pr_number = pr_number
+            result.outcome.pr_url = pr_url
+            workflow.logger.info("Pull request created: %s", pr_url)
 
             pr_results = await workflow.execute_activity(
                 wait_for_checks_activity,
@@ -314,7 +325,7 @@ class RunSingleMutationWorkflow:
                 ),
                 schedule_to_close_timeout=timedelta(seconds=params.timeout_seconds + 60),
             )
-            result.pr_results = pr_results
+            result.outcome.pr_results = pr_results
             workflow.logger.info("GitHub checks completed")
 
             analysis_payload = await workflow.execute_activity(
@@ -327,12 +338,12 @@ class RunSingleMutationWorkflow:
                 ),
                 schedule_to_close_timeout=timedelta(minutes=3),
             )
-            result.analysis = analysis_payload["analysis"]
-            result.results_file = analysis_payload["results_file"]
-            workflow.logger.info("Analysis saved to %s", result.results_file)
+            result.outcome.analysis = analysis_payload["analysis"]
+            result.outcome.results_file = analysis_payload["results_file"]
+            workflow.logger.info("Analysis saved to %s", result.outcome.results_file)
         except Exception as exc:
-            result.error = str(exc)
-            result.traceback = "".join(traceback.format_exception(exc))
+            result.outcome.error = str(exc)
+            result.outcome.traceback = "".join(traceback.format_exception(exc))
             workflow.logger.error("Workflow encountered error: %s", exc)
         finally:
             cleanup_details = await workflow.execute_activity(
@@ -344,7 +355,7 @@ class RunSingleMutationWorkflow:
                 ),
                 schedule_to_close_timeout=timedelta(minutes=5),
             )
-            result.cleanup_details = cleanup_details
+            result.workflow.cleanup_details = cleanup_details
             workflow.logger.info("Cleanup completed: %s", cleanup_details)
 
             try:
@@ -356,8 +367,8 @@ class RunSingleMutationWorkflow:
                     ),
                     schedule_to_close_timeout=timedelta(minutes=2),
                 )
-                result.summary_file = summary_path
-                result.metadata["summary_file"] = summary_path
+                result.outcome.summary_file = summary_path
+                result.workflow.metadata["summary_file"] = summary_path
                 workflow.logger.info("Result summary saved to %s", summary_path)
             except Exception as persist_exc:
                 workflow.logger.error("Failed to persist result summary: %s", persist_exc)
