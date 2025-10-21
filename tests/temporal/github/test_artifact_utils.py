@@ -7,7 +7,7 @@ from pathlib import Path
 from temporal.github import artifact_utils
 
 
-FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
+FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 JUNIT_FIXTURE = FIXTURES_DIR / "pytest_sample_junit.xml"
 
 
