@@ -10,7 +10,7 @@ from temporal.github.check_utils import CheckProcessor
 from temporal.github.test_analyzer import TestAnalyzer
 
 
-FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
+FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 JUNIT_FIXTURE = FIXTURES_DIR / "pytest_sample_junit.xml"
 
 
