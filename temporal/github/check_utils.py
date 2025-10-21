@@ -3,7 +3,11 @@ Shared utilities for processing GitHub check results.
 """
 import subprocess
 import re
+from pathlib import Path
 from typing import Dict, Any, List, Optional
+
+from temporal.github import artifact_utils
+from temporal.github.artifact_utils import ArtifactDownload
 
 
 class CheckProcessor:
@@ -215,6 +219,55 @@ class CheckProcessor:
         if match:
             return match.group(1)
         return None
+
+    @staticmethod
+    def get_check_run_id(check: Dict[str, Any]) -> Optional[str]:
+        """Resolve the workflow run identifier associated with a check."""
+        if not isinstance(check, dict):
+            return None
+        check_url = check.get('url') or check.get('link')
+        if not check_url:
+            normalized = CheckProcessor.normalize_check(check)
+            check_url = normalized.get('url')
+        return CheckProcessor.extract_run_id_from_url(check_url or "")
+
+    @staticmethod
+    def list_check_artifacts(
+        check: Dict[str, Any],
+        repo_path: Optional[str] = None,
+        repo: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Return workflow artifacts tied to a check's run, if a repo path is known.
+        """
+        run_id = CheckProcessor.get_check_run_id(check)
+        if not run_id or not repo_path:
+            return []
+        return artifact_utils.list_run_artifacts(
+            run_id,
+            Path(repo_path),
+            repo=repo,
+        )
+
+    @staticmethod
+    def download_check_junit_artifacts(
+        check: Dict[str, Any],
+        repo_path: Optional[str] = None,
+        repo: Optional[str] = None,
+        base_temp_dir: Optional[Path] = None,
+    ) -> List[ArtifactDownload]:
+        """
+        Download artifacts for the given check that contain junit XML files.
+        """
+        run_id = CheckProcessor.get_check_run_id(check)
+        if not run_id or not repo_path:
+            return []
+        return artifact_utils.download_all_junit_artifacts(
+            run_id=run_id,
+            repo_path=Path(repo_path),
+            repo=repo,
+            base_temp_dir=base_temp_dir,
+        )
     
     @staticmethod
     def get_failed_check_details(
