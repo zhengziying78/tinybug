@@ -31,6 +31,7 @@ from temporal.workflows.activities import (
 )
 from temporal.workflows.mutation_flow import MutationFlowResult, generate_mutation_metadata
 from temporal.workflows.summary import render_summary_lines
+from temporal.mutation.mutations import get_mutation
 
 
 # ---------------------------------------------------------------------------
@@ -217,7 +218,11 @@ class RunSingleMutationWorkflow:
     @workflow.run
     async def run(self, params: MutationWorkflowParams) -> MutationFlowResult:
         repo_config = params.repo_config
-        mutation_config = repo_config["mutation"]
+        mutation_config = get_mutation(repo_config["name"])
+        if not mutation_config:
+            raise ValueError(
+                f"No mutation configured for repository {repo_config['name']}"
+            )
         repo_id = repo_config.get("repo_id")
 
         # Generate branch and PR metadata deterministically

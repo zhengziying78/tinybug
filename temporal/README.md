@@ -10,6 +10,8 @@ testing MVP.
   demo scripts.
 - `temporal/github/`: GitHub-facing helpers (check processing, repo and PR
   management, test analysis) shared by activities and future services.
+- `temporal/mutation/`: Repository-specific mutation presets consumed by
+  Temporal workflows.
 
 Legacy demo-only helpers now live exclusively under `scripts/demo/workflow/flow.py`
 for the console experience; all reusable code resides in the `temporal.*` packages.

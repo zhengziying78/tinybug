@@ -4,9 +4,11 @@ Mutation engines for generating code mutations across different programming lang
 
 ## Contents
 
-- **Python**: Python-specific mutation operators
-- **JavaScript**: JS/TS mutation support (future)
-- **Common**: Language-agnostic utilities and shared mutation logic
+- **mutator.py**: Core helper that applies configured regex mutations to a
+  repository checkout.
+- **Python**: (future) Python-specific mutation operators
+- **JavaScript**: (future) JS/TS mutation support
+- **Common**: (future) Language-agnostic utilities and shared mutation logic
 
 ## Purpose
 

@@ -10,7 +10,8 @@ from typing import Optional
 
 from temporalio.client import Client
 
-from scripts.demo.known_repos import KNOWN_REPOS
+from temporal.github.known_repos import KNOWN_REPOS
+from temporal.mutation.mutations import get_mutation
 from temporal.workflows.mutation_flow import MutationFlowResult, generate_mutation_metadata
 from temporal.workflows.temporal_worker import (
     MutationWorkflowParams,
@@ -37,7 +38,12 @@ async def start_workflow(
         available = ", ".join(sorted(KNOWN_REPOS.keys()))
         raise ValueError(f"Unknown repository '{repo_name}'. Options: {available}")
 
-    mutation_config = repo_config["mutation"]
+    mutation_config = get_mutation(repo_name)
+    if not mutation_config:
+        available = ", ".join(sorted(KNOWN_REPOS.keys()))
+        raise ValueError(
+            f"No mutation configured for repository '{repo_name}'. Options: {available}"
+        )
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     mutation_metadata = generate_mutation_metadata(mutation_config, timestamp=timestamp)
 
