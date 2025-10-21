@@ -103,17 +103,53 @@ async def start_workflow(
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Start the Temporal demo mutation workflow")
-    parser.add_argument("--repo", default="demo-httpie-cli", help="Demo repository name")
-    parser.add_argument("--task-queue", default="mutation-demo-task-queue", help="Temporal task queue")
-    parser.add_argument("--namespace", default="default", help="Temporal namespace")
-    parser.add_argument("--address", default="localhost:7233", help="Temporal frontend address (host:port)")
+    parser = argparse.ArgumentParser(
+        description="Start the Temporal demo mutation workflow"
+    )
+    parser.add_argument(
+        "--repo",
+        default="demo-httpie-cli",
+        help="Demo repository name",
+    )
+    parser.add_argument(
+        "--task-queue",
+        default="mutation-demo-task-queue",
+        help="Temporal task queue",
+    )
+    parser.add_argument(
+        "--namespace",
+        default="default",
+        help="Temporal namespace",
+    )
+    parser.add_argument(
+        "--address",
+        default="localhost:7233",
+        help="Temporal frontend address (host:port)",
+    )
     parser.add_argument("--workflow-id", help="Override the workflow ID")
-    parser.add_argument("--timeout", type=int, default=600, help="Check wait timeout in seconds")
-    parser.add_argument("--output-dir", help="Directory to store analysis artifacts")
-    parser.add_argument("--base-clone-dir", help="Override base directory for cloning repos")
-    parser.add_argument("--summary-dir", help="Directory to store workflow summary JSON")
-    parser.add_argument("--wait", action="store_true", help="Wait for workflow completion and print result")
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        default=600,
+        help="Check wait timeout in seconds",
+    )
+    parser.add_argument(
+        "--output-dir",
+        help="Directory to store analysis artifacts",
+    )
+    parser.add_argument(
+        "--base-clone-dir",
+        help="Override base directory for cloning repos",
+    )
+    parser.add_argument(
+        "--summary-dir",
+        help="Directory to store workflow summary JSON",
+    )
+    parser.add_argument(
+        "--wait",
+        action="store_true",
+        help="Wait for workflow completion and print result",
+    )
     return parser.parse_args()
 
 

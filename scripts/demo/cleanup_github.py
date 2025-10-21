@@ -82,7 +82,7 @@ def main():
         open_prs = get_open_prs(repo_name)
         
         if not open_prs:
-            print(f"   No open pull requests found")
+            print("   No open pull requests found")
             print()
             continue
         

@@ -12,7 +12,12 @@ class CleanupManager:
     def __init__(self):
         self.repo_manager = RepoManager()
     
-    def cleanup_pr_and_repo(self, repo_path: Path, pr_number: str, repo_id: str = None) -> Dict[str, Any]:
+    def cleanup_pr_and_repo(
+        self,
+        repo_path: Path,
+        pr_number: str,
+        repo_id: str = None,
+    ) -> Dict[str, Any]:
         """Clean up pull request and local repository."""
         cleanup_results = {
             'pr_closed': False,

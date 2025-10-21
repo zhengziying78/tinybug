@@ -13,16 +13,18 @@ from models.mutation.result import MutationResult
 
 def build_pr_body(mutation_config: Mapping[str, Any]) -> str:
     """Construct the pull request body for a mutation."""
-    return f"""
-This PR contains a mutation for testing purposes.
-
-**Mutation Details:**
-- File: {mutation_config['file_path']}
-- Line: {mutation_config['line_number']}
-- Change: `{mutation_config['find_pattern']}` → `{mutation_config['replace_pattern']}`
-
-This mutation tests whether the test suite can detect the change in {mutation_config['description'].lower()}.
-"""
+    description = mutation_config['description'].lower()
+    return (
+        "\n"
+        "This PR contains a mutation for testing purposes.\n\n"
+        "**Mutation Details:**\n"
+        f"- File: {mutation_config['file_path']}\n"
+        f"- Line: {mutation_config['line_number']}\n"
+        f"- Change: `{mutation_config['find_pattern']}` → "
+        f"`{mutation_config['replace_pattern']}`\n\n"
+        "This mutation tests whether the test suite can detect the change in "
+        f"{description}.\n"
+    )
 
 
 def generate_mutation_metadata(
