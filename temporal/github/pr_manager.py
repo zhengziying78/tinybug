@@ -12,7 +12,13 @@ class PRManager:
     def __init__(self, repo_path: Path):
         self.repo_path = repo_path
     
-    def create_pull_request(self, title: str, body: str, base_branch: str = "main", repo: str = None) -> Dict[str, Any]:
+    def create_pull_request(
+        self,
+        title: str,
+        body: str,
+        base_branch: str = "main",
+        repo: str = None,
+    ) -> Dict[str, Any]:
         """Create a pull request using GitHub CLI."""
         cmd = [
             "gh", "pr", "create",
@@ -25,7 +31,13 @@ class PRManager:
         if repo:
             cmd.extend(["--repo", repo])
         
-        result = subprocess.run(cmd, cwd=self.repo_path, capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            cmd,
+            cwd=self.repo_path,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
         pr_url = result.stdout.strip()
         
         # Get PR number from URL
@@ -47,7 +59,13 @@ class PRManager:
         if repo:
             cmd.extend(["--repo", repo])
         
-        result = subprocess.run(cmd, cwd=self.repo_path, capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            cmd,
+            cwd=self.repo_path,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
         return json.loads(result.stdout)
     
     def get_pr_checks(self, pr_number: str, repo: str = None) -> Dict[str, Any]:
@@ -62,7 +80,13 @@ class PRManager:
             cmd.extend(["--repo", repo])
         
         try:
-            result = subprocess.run(cmd, cwd=self.repo_path, capture_output=True, text=True, check=True)
+            result = subprocess.run(
+                cmd,
+                cwd=self.repo_path,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
             return json.loads(result.stdout)
         except subprocess.CalledProcessError as e:
             # If exit code is 8, it means checks are pending
@@ -90,7 +114,12 @@ class PRManager:
         
         subprocess.run(cmd, cwd=self.repo_path, check=True)
     
-    def wait_for_checks(self, pr_number: str, timeout_seconds: int = 300, repo: str = None) -> Dict[str, Any]:
+    def wait_for_checks(
+        self,
+        pr_number: str,
+        timeout_seconds: int = 300,
+        repo: str = None,
+    ) -> Dict[str, Any]:
         """Wait for PR checks to complete and return results."""
         import time
         
@@ -120,13 +149,24 @@ class PRManager:
                         check_summary = CheckProcessor.get_check_summary(checks)
                         
                         # Check if all checks are completed (no running checks)
-                        if check_summary['running_checks'] == 0 and check_summary['completed_checks'] == check_summary['total_checks']:
+                        all_checks_completed = (
+                            check_summary['running_checks'] == 0
+                            and check_summary['completed_checks']
+                            == check_summary['total_checks']
+                        )
+                        if all_checks_completed:
                             checks_completed = True
                     else:
-                        print("🔍 No checks available yet - GitHub Actions may still be starting up")
+                        print(
+                            "🔍 No checks available yet - "
+                            "GitHub Actions may still be starting up"
+                        )
                         # If no checks are available, wait a bit longer for them to start
                         if elapsed_time > 120:  # Wait 2 minutes to see if checks start
-                            print("🔍 No checks detected after 2 minutes - assuming no CI/CD is configured")
+                            print(
+                                "🔍 No checks detected after 2 minutes - "
+                                "assuming no CI/CD is configured"
+                            )
                             return {
                                 'status': status,
                                 'checks': checks,
@@ -159,7 +199,10 @@ class PRManager:
                         elif isinstance(rollup, list):
                             if len(rollup) > 0 and isinstance(rollup[0], dict):
                                 rollup_state = rollup[0].get('state', 'UNKNOWN')
-                                print(f"📊 Overall status: {rollup_state} (from rollup list)")
+                                print(
+                                    f"📊 Overall status: {rollup_state} "
+                                    "(from rollup list)"
+                                )
                                 
                                 if rollup[0].get('state') in ['SUCCESS', 'FAILURE', 'ERROR']:
                                     print(f"✅ All checks completed with status: {rollup_state}")
@@ -169,9 +212,15 @@ class PRManager:
                                         'completed': True
                                     }
                             else:
-                                print("📊 Overall status: PENDING (rollup list is empty or invalid)")
+                                print(
+                                    "📊 Overall status: PENDING "
+                                    "(rollup list is empty or invalid)"
+                                )
                         else:
-                            print(f"📊 Overall status: UNKNOWN (unexpected rollup type: {type(rollup)})")
+                            print(
+                                "📊 Overall status: UNKNOWN "
+                                f"(unexpected rollup type: {type(rollup)})"
+                            )
                     else:
                         print("📊 Overall status: PENDING (no rollup data yet)")
                 except Exception as e:

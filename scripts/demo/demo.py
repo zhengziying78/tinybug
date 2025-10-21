@@ -5,7 +5,7 @@ import sys
 import traceback
 from dataclasses import replace
 from pathlib import Path
-from typing import Any, Dict, Mapping, Optional
+from typing import Any, Mapping, Optional
 
 from temporal.workflows.activities import (
     analyze_test_results,
@@ -166,7 +166,9 @@ def select_repo_with_timeout():
         print()
     
     print(
-        f"Enter your choice (1-{len(menu_entries)}) or wait 10 seconds for default ({DEFAULT_REPO_NAME}):"
+        "Enter your choice (1-"
+        f"{len(menu_entries)}) or wait 10 seconds for default "
+        f"({DEFAULT_REPO_NAME}):"
     )
     
     # Use a queue to communicate between threads

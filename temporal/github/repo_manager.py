@@ -1,7 +1,6 @@
 """
 Repository management functionality for mutation testing PoC.
 """
-import os
 import shutil
 import subprocess
 from pathlib import Path

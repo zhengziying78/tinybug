@@ -54,15 +54,41 @@ class CheckProcessor:
             }
         
         # Normalize all checks first
-        normalized_checks = [CheckProcessor.normalize_check(check) for check in checks]
+        normalized_checks = [
+            CheckProcessor.normalize_check(check) for check in checks
+        ]
         
         total_checks = len(normalized_checks)
-        passed_checks = sum(1 for check in normalized_checks if check.get('bucket') == CheckProcessor.STATUS_PASS)
-        failed_checks = sum(1 for check in normalized_checks if check.get('bucket') == CheckProcessor.STATUS_FAIL)
-        cancelled_checks = sum(1 for check in normalized_checks if check.get('bucket') == CheckProcessor.STATUS_CANCEL)
-        skipped_checks = sum(1 for check in normalized_checks if check.get('bucket') == CheckProcessor.STATUS_SKIPPING)
-        running_checks = sum(1 for check in normalized_checks if check.get('bucket') == CheckProcessor.STATUS_PENDING)
-        completed_checks = sum(1 for check in normalized_checks if check.get('bucket') in CheckProcessor.COMPLETED_STATUSES)
+        passed_checks = sum(
+            1
+            for check in normalized_checks
+            if check.get('bucket') == CheckProcessor.STATUS_PASS
+        )
+        failed_checks = sum(
+            1
+            for check in normalized_checks
+            if check.get('bucket') == CheckProcessor.STATUS_FAIL
+        )
+        cancelled_checks = sum(
+            1
+            for check in normalized_checks
+            if check.get('bucket') == CheckProcessor.STATUS_CANCEL
+        )
+        skipped_checks = sum(
+            1
+            for check in normalized_checks
+            if check.get('bucket') == CheckProcessor.STATUS_SKIPPING
+        )
+        running_checks = sum(
+            1
+            for check in normalized_checks
+            if check.get('bucket') == CheckProcessor.STATUS_PENDING
+        )
+        completed_checks = sum(
+            1
+            for check in normalized_checks
+            if check.get('bucket') in CheckProcessor.COMPLETED_STATUSES
+        )
         
         return {
             'total_checks': total_checks,
@@ -101,14 +127,18 @@ class CheckProcessor:
         return False
     
     @staticmethod
-    def get_failed_test_checks(checks: List[Dict[str, Any]], repo_path: str = None, repo: str = None) -> List[Dict[str, Any]]:
+    def get_failed_test_checks(
+        checks: List[Dict[str, Any]],
+        repo_path: str = None,
+        repo: str = None,
+    ) -> List[Dict[str, Any]]:
         """Get all failed test checks with detailed failure information."""
         failed_tests = []
         
         for check in checks:
             normalized_check = CheckProcessor.normalize_check(check)
-            if (normalized_check.get('bucket') == CheckProcessor.STATUS_FAIL and 
-                CheckProcessor.is_test_check(normalized_check)):
+            is_failed = normalized_check.get('bucket') == CheckProcessor.STATUS_FAIL
+            if is_failed and CheckProcessor.is_test_check(normalized_check):
                 
                 # Get basic check info
                 basic_info = {
@@ -119,11 +149,17 @@ class CheckProcessor:
                 # If repo_path is provided, try to get detailed failure info
                 if repo_path:
                     try:
-                        detailed_info = CheckProcessor.get_failed_check_details(normalized_check, repo_path, repo)
+                        detailed_info = CheckProcessor.get_failed_check_details(
+                            normalized_check,
+                            repo_path,
+                            repo,
+                        )
                         basic_info.update(detailed_info)
-                    except Exception as e:
+                    except Exception:
                         # If detailed extraction fails, keep basic info
-                        basic_info['failure_reason'] = 'due to unknown reasons (failed to fetch logs)'
+                        basic_info['failure_reason'] = (
+                            'due to unknown reasons (failed to fetch logs)'
+                        )
                 
                 failed_tests.append(basic_info)
         
@@ -138,8 +174,17 @@ class CheckProcessor:
         
         summary = CheckProcessor.get_check_summary(checks)
         
-        print(f"🔍 Checks summary: {summary['total_checks']} total, {summary['completed_checks']} completed, {summary['running_checks']} running")
-        print(f"   ✅ Passed: {summary['passed_checks']}, ❌ Failed: {summary['failed_checks']}")
+        print(
+            "🔍 Checks summary: "
+            f"{summary['total_checks']} total, "
+            f"{summary['completed_checks']} completed, "
+            f"{summary['running_checks']} running"
+        )
+        print(
+            "   ✅ Passed: "
+            f"{summary['passed_checks']}, "
+            f"❌ Failed: {summary['failed_checks']}"
+        )
         
         # Show individual check details (limit to first 10 to avoid spam)
         normalized_checks = [CheckProcessor.normalize_check(check) for check in checks]
@@ -172,7 +217,11 @@ class CheckProcessor:
         return None
     
     @staticmethod
-    def get_failed_check_details(check: Dict[str, Any], repo_path: str, repo: str = None) -> Dict[str, Any]:
+    def get_failed_check_details(
+        check: Dict[str, Any],
+        repo_path: str,
+        repo: str = None,
+    ) -> Dict[str, Any]:
         """Get detailed failure information for a failed check."""
         check_details = {
             'check_name': check.get('name', 'Unknown'),
@@ -186,7 +235,10 @@ class CheckProcessor:
         run_id = CheckProcessor.extract_run_id_from_url(check_url)
         
         if not run_id:
-            check_details['failure_reason'] = f"due to unknown reasons (no run ID found in URL: {check_url})"
+            check_details['failure_reason'] = (
+                "due to unknown reasons "
+                f"(no run ID found in URL: {check_url})"
+            )
             return check_details
         
         try:
@@ -194,30 +246,52 @@ class CheckProcessor:
             cmd = ["gh", "run", "view", run_id, "--log-failed"]
             if repo:
                 cmd.extend(["--repo", repo])
-            
-            result = subprocess.run(cmd, cwd=repo_path, capture_output=True, text=True, timeout=30)
+
+            result = subprocess.run(
+                cmd,
+                cwd=repo_path,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
             
             if result.returncode == 0:
                 check_details['log_available'] = True
                 log_output = result.stdout
                 
                 # Parse the log output to extract test failures
-                failed_tests = CheckProcessor.parse_test_failures_from_log(log_output)
+                failed_tests = CheckProcessor.parse_test_failures_from_log(
+                    log_output
+                )
                 if failed_tests:
                     check_details['failed_tests'] = failed_tests
-                    check_details['failure_reason'] = f"due to {len(failed_tests)} failed test case(s)"
+                    check_details['failure_reason'] = (
+                        f"due to {len(failed_tests)} failed test case(s)"
+                    )
                 else:
                     # Look for other common failure patterns
                     if "error" in log_output.lower() or "failed" in log_output.lower():
-                        check_details['failure_reason'] = "due to build or runtime errors"
+                        check_details['failure_reason'] = (
+                            "due to build or runtime errors"
+                        )
             else:
                 # If command failed, add debug info (truncate stderr to avoid too much output)
-                stderr_msg = result.stderr[:200] + "..." if len(result.stderr) > 200 else result.stderr
-                check_details['failure_reason'] = f"due to unknown reasons (failed to fetch logs: {stderr_msg})"
+                stderr_msg = (
+                    result.stderr[:200] + "..."
+                    if len(result.stderr) > 200
+                    else result.stderr
+                )
+                check_details['failure_reason'] = (
+                    "due to unknown reasons "
+                    f"(failed to fetch logs: {stderr_msg})"
+                )
                     
         except (subprocess.TimeoutExpired, subprocess.CalledProcessError) as e:
             # If we can't get the logs, just return the basic info
-            check_details['failure_reason'] = f"due to unknown reasons (error: {str(e)[:200]})"
+            check_details['failure_reason'] = (
+                "due to unknown reasons "
+                f"(error: {str(e)[:200]})"
+            )
         
         return check_details
     
@@ -248,8 +322,15 @@ class CheckProcessor:
         # If no short summary found, look for individual FAILED patterns (fallback)
         if not failed_tests:
             # Only look for well-formed test paths
-            pattern = r'FAILED\s+((?:tests?/)?[a-zA-Z0-9_/.-]+\.py::[a-zA-Z0-9_]+(?:\s+-\s+[^\n\r]+)?)'
-            matches = re.findall(pattern, log_output, re.IGNORECASE | re.MULTILINE)
+            pattern = (
+                r'FAILED\s+((?:tests?/)?[a-zA-Z0-9_/.-]+\.py::[a-zA-Z0-9_]+'
+                r'(?:\s+-\s+[^\n\r]+)?)'
+            )
+            matches = re.findall(
+                pattern,
+                log_output,
+                re.IGNORECASE | re.MULTILINE,
+            )
             for match in matches:
                 test_info = match.strip()
                 if test_info and test_info not in failed_tests:

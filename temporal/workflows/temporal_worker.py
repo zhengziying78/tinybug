@@ -419,10 +419,24 @@ def main() -> None:
     """CLI entry point for running the worker."""
     import argparse
 
-    parser = argparse.ArgumentParser(description="Run Temporal worker for demo mutation workflow")
-    parser.add_argument("--task-queue", required=True, help="Temporal task queue to poll")
-    parser.add_argument("--address", default="localhost:7233", help="Temporal frontend address (host:port)")
-    parser.add_argument("--namespace", default="default", help="Temporal namespace")
+    parser = argparse.ArgumentParser(
+        description="Run Temporal worker for demo mutation workflow"
+    )
+    parser.add_argument(
+        "--task-queue",
+        required=True,
+        help="Temporal task queue to poll",
+    )
+    parser.add_argument(
+        "--address",
+        default="localhost:7233",
+        help="Temporal frontend address (host:port)",
+    )
+    parser.add_argument(
+        "--namespace",
+        default="default",
+        help="Temporal namespace",
+    )
     args = parser.parse_args()
 
     asyncio.run(

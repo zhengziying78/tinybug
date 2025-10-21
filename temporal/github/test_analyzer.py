@@ -51,7 +51,12 @@ class TestAnalyzer:
                 analysis['checks'].append(normalized_check)
             
             # Extract test failures using the shared utility
-            analysis['test_failures'] = CheckProcessor.get_failed_test_checks(checks, str(self.repo_path) if self.repo_path else None, repo)
+            repo_path = str(self.repo_path) if self.repo_path else None
+            analysis['test_failures'] = CheckProcessor.get_failed_test_checks(
+                checks,
+                repo_path,
+                repo,
+            )
             
         except Exception as e:
             import traceback
@@ -73,8 +78,11 @@ class TestAnalyzer:
             'passed_checks': check_summary['passed_checks'],
             'failed_checks': check_summary['failed_checks'],
             'test_failures_count': len(analysis['test_failures']),
-            'mutation_killed': check_summary['failed_checks'] > 0,  # If any tests fail, mutation is "killed"
-            'mutation_survived': check_summary['failed_checks'] == 0 and analysis['completed']
+            # If any tests fail, the mutation is considered "killed".
+            'mutation_killed': check_summary['failed_checks'] > 0,
+            'mutation_survived': (
+                check_summary['failed_checks'] == 0 and analysis['completed']
+            )
         }
     
     def save_results(self, analysis: Dict[str, Any], filename: str = None) -> Path:
