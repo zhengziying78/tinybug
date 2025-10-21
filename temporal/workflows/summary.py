@@ -10,29 +10,29 @@ from temporal.workflows.mutation_flow import MutationFlowResult
 
 def render_summary_lines(
     repo_config: Mapping[str, Any],
-    result: MutationFlowResult,
+    flow_result: MutationFlowResult,
 ) -> List[str]:
     """Return formatted summary lines for a mutation workflow result."""
     lines: List[str] = []
     lines.append("Mutation testing summary:")
     lines.append(f"  - Repository: {repo_config['url']}")
-    lines.append(f"  - Branch: {result.branch_name}")
-    lines.append(f"  - Pull request: {result.pr_url or 'N/A'}")
-    lines.append(f"  - Mutation applied: {result.mutation_applied}")
+    lines.append(f"  - Branch: {flow_result.context.branch_name}")
+    lines.append(f"  - Pull request: {flow_result.outcome.pr_url or 'N/A'}")
+    lines.append(f"  - Mutation applied: {flow_result.outcome.mutation_applied}")
 
-    if result.analysis:
-        summary = result.analysis.get("summary", {})
+    if flow_result.outcome.analysis:
+        summary = flow_result.outcome.analysis.get("summary", {})
         lines.append(f"  - Total checks: {summary.get('total_checks', 0)}")
         lines.append(f"  - Passed checks: {summary.get('passed_checks', 0)}")
         lines.append(f"  - Failed checks: {summary.get('failed_checks', 0)}")
         lines.append(f"  - Mutation killed: {summary.get('mutation_killed', False)}")
         lines.append(f"  - Mutation survived: {summary.get('mutation_survived', False)}")
-        lines.append(f"  - Results file: {result.results_file}")
+        lines.append(f"  - Results file: {flow_result.outcome.results_file}")
 
-        if result.summary_file:
-            lines.append(f"  - Summary file: {result.summary_file}")
+        if flow_result.outcome.summary_file:
+            lines.append(f"  - Summary file: {flow_result.outcome.summary_file}")
 
-        failures = result.analysis.get("test_failures") or []
+        failures = flow_result.outcome.analysis.get("test_failures") or []
         if failures:
             lines.append("")
             lines.append("Detailed failure information:")
@@ -48,16 +48,16 @@ def render_summary_lines(
             lines.append("")
     else:
         lines.append("  - No analysis available")
-        if result.summary_file:
-            lines.append(f"  - Summary file: {result.summary_file}")
+        if flow_result.outcome.summary_file:
+            lines.append(f"  - Summary file: {flow_result.outcome.summary_file}")
 
-    if result.error:
+    if flow_result.outcome.error:
         lines.append("")
         lines.append("Errors encountered during workflow:")
-        lines.append(f"  - {result.error}")
-        if result.traceback:
-            lines.append(result.traceback)
+        lines.append(f"  - {flow_result.outcome.error}")
+        if flow_result.outcome.traceback:
+            lines.append(flow_result.outcome.traceback)
 
     lines.append("")
-    lines.append(f"Cleanup results: {result.cleanup_details}")
+    lines.append(f"Cleanup results: {flow_result.workflow.cleanup_details}")
     return lines

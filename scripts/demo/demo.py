@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import sys
 import traceback
+from dataclasses import replace
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
 
@@ -17,7 +18,9 @@ from temporal.workflows.activities import (
     wait_for_checks,
 )
 from temporal.workflows.mutation_flow import (
+    MutationContext,
     MutationFlowResult,
+    MutationResult,
     generate_mutation_metadata,
 )
 from temporal.workflows.storage import persist_flow_result
@@ -46,17 +49,17 @@ def run_single_mutation_flow(
     pr_title = mutation_metadata["pr_title"]
     pr_body = mutation_metadata["pr_body"]
 
-    result = MutationFlowResult(
+    context = MutationContext(
         repo_url=repo_config["url"],
         branch_name=branch_name,
         pr_title=pr_title,
         mutation_description=mutation_config["description"],
-        metadata={
-            "repo_id": repo_config.get("repo_id"),
-            "base_branch": repo_config["base_branch"],
-            "timestamp": mutation_metadata["timestamp"],
-        },
+        repo_id=repo_config.get("repo_id"),
+        base_branch=repo_config["base_branch"],
+        timestamp=mutation_metadata["timestamp"],
     )
+    outcome = MutationResult()
+    result = MutationFlowResult(context=context, outcome=outcome)
 
     repo_path: Optional[Path] = None
     pr_number: Optional[str] = None
@@ -67,14 +70,14 @@ def run_single_mutation_flow(
     try:
         log(f"Cloning repository {repo_config['url']}")
         repo_path = clone_repository(repo_config["url"], base_dir=base_clone_dir)
-        result.repo_path = str(repo_path)
+        result.workflow.repo_path = str(repo_path)
 
         log(f"Creating branch {branch_name}")
         create_branch(repo_path, branch_name)
 
         log("Applying mutation")
         mutation_applied = apply_mutation(repo_path, mutation_config)
-        result.mutation_applied = mutation_applied
+        result.outcome.mutation_applied = mutation_applied
         if mutation_applied:
             log("Mutation applied successfully")
         else:
@@ -94,9 +97,11 @@ def run_single_mutation_flow(
             repo_id=repo_config.get("repo_id"),
         )
         pr_number = pr_info["number"]
-        result.pr_number = pr_number
-        result.pr_url = pr_info.get("url")
-        log(f"Pull request created: {result.pr_url}")
+        pr_url = pr_info.get("url")
+        result.context = replace(result.context, pr_number=pr_number, pr_url=pr_url)
+        result.outcome.pr_number = pr_number
+        result.outcome.pr_url = pr_url
+        log(f"Pull request created: {pr_url}")
 
         log("Waiting for GitHub checks to complete")
         pr_results = wait_for_checks(
@@ -105,7 +110,7 @@ def run_single_mutation_flow(
             timeout_seconds=timeout_seconds,
             repo_id=repo_config.get("repo_id"),
         )
-        result.pr_results = pr_results
+        result.outcome.pr_results = pr_results
         log("Checks completed")
 
         log("Analyzing test results")
@@ -115,12 +120,12 @@ def run_single_mutation_flow(
             repo_id=repo_config.get("repo_id"),
             output_dir=output_dir,
         )
-        result.analysis = analysis
-        result.results_file = str(results_file)
-        log(f"Analysis saved to {result.results_file}")
+        result.outcome.analysis = analysis
+        result.outcome.results_file = str(results_file)
+        log(f"Analysis saved to {result.outcome.results_file}")
     except Exception as exc:  # pragma: no cover - CLI side-effect logging
-        result.error = str(exc)
-        result.traceback = traceback.format_exc()
+        result.outcome.error = str(exc)
+        result.outcome.traceback = traceback.format_exc()
         log(f"Encountered error: {exc}")
     finally:
         log("Cleaning up repository and pull request")
@@ -129,15 +134,15 @@ def run_single_mutation_flow(
             pr_number=pr_number,
             repo_id=repo_config.get("repo_id"),
         )
-        result.cleanup_details = cleanup_details
+        result.workflow.cleanup_details = cleanup_details
 
         try:
             summary_path = persist_flow_result(
                 result.to_dict(),
                 summary_output_dir,
             )
-            result.summary_file = str(summary_path)
-            result.metadata["summary_file"] = result.summary_file
+            result.outcome.summary_file = str(summary_path)
+            result.workflow.metadata["summary_file"] = result.outcome.summary_file
             log(f"Result summary saved to {summary_path}")
         except Exception as storage_exc:  # pragma: no cover - CLI side-effect logging
             log(f"Failed to persist result summary: {storage_exc}")

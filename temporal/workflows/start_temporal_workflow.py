@@ -12,7 +12,12 @@ from temporalio.client import Client
 
 from temporal.github.known_repos import KNOWN_REPOS
 from temporal.mutation.mutations import get_mutation
-from temporal.workflows.mutation_flow import MutationFlowResult, generate_mutation_metadata
+from temporal.workflows.mutation_flow import (
+    MutationContext,
+    MutationFlowResult,
+    MutationResult,
+    generate_mutation_metadata,
+)
 from temporal.workflows.temporal_worker import (
     MutationWorkflowParams,
     RunSingleMutationWorkflow,
@@ -73,20 +78,28 @@ async def start_workflow(
             print(line)
         return result
 
-    interim_result = MutationFlowResult(
+    interim_context = MutationContext(
         repo_url=repo_config["url"],
         branch_name=mutation_metadata["branch_name"],
         pr_title=mutation_metadata["pr_title"],
         mutation_description=mutation_config["description"],
-        metadata={
+        repo_id=repo_config.get("repo_id"),
+        base_branch=repo_config["base_branch"],
+        timestamp=mutation_metadata["timestamp"],
+    )
+    interim_result = MutationFlowResult(
+        context=interim_context,
+        outcome=MutationResult(),
+    )
+    interim_result.workflow.metadata.update(
+        {
             "workflow_id": handle.id,
             "run_id": handle.run_id,
-            "timestamp": mutation_metadata["timestamp"],
-        },
+        }
     )
     print("Workflow started. Expected branch/PR names:")
-    print(f"  - Branch: {interim_result.branch_name}")
-    print(f"  - PR Title: {interim_result.pr_title}")
+    print(f"  - Branch: {interim_result.context.branch_name}")
+    print(f"  - PR Title: {interim_result.context.pr_title}")
     if summary_output_dir:
         print(f"  - Summary directory: {summary_output_dir}")
     return interim_result
