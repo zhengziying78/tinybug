@@ -5,15 +5,8 @@ This directory contains scripts for running mutation testing demos and managing 
 ## Files
 
 - `demo.py` - Main mutation testing demo script
-- `activities.py` - Backwards-compatible shim for workflow helpers (real code in `temporal/workflows/activities.py`)
-- `workflow/flow.py` - Demo runner that now consumes the production-ready helpers under `temporal/workflows/`
-- `workflow/temporal_worker.py` - Shim that forwards to `temporal/workflows/temporal_worker.py`
-- `workflow/start_temporal_workflow.py` - Shim that forwards to `temporal/workflows/start_temporal_workflow.py`
+- `workflow/flow.py` - Demo runner that consumes the production-ready helpers under `temporal/workflows/`
 - `cleanup_github.py` - Utility to clean up open pull requests in demo repositories
-
-> **Note:** The reusable GitHub and Temporal workflow implementations have moved to
-> `temporal/github/` and `temporal/workflows/`. The wrappers in `scripts/demo/`
-> are kept only so existing demo commands continue to work unchanged.
 
 ## demo.py
 
@@ -69,16 +62,16 @@ Results are saved to a timestamped JSON file in the `mutation_results/` director
 
 The demo flow can also be executed via Temporal:
 
-- `workflow/temporal_worker.py` registers activities and the `RunSingleMutationWorkflow` that mirrors the demo steps. Run it as a worker:
+- `temporal/workflows/temporal_worker.py` registers activities and the `RunSingleMutationWorkflow` that mirrors the demo steps. Run it as a worker:
 
   ```bash
-  python -m scripts.demo.workflow.temporal_worker --task-queue mutation-demo-task-queue
+  python -m temporal.workflows.temporal_worker --task-queue mutation-demo-task-queue
   ```
 
-- `workflow/start_temporal_workflow.py` connects to Temporal and starts the workflow:
+- `temporal/workflows/start_temporal_workflow.py` connects to Temporal and starts the workflow:
 
   ```bash
-  python -m scripts.demo.workflow.start_temporal_workflow --repo demo-httpie-cli --wait
+  python -m temporal.workflows.start_temporal_workflow --repo demo-httpie-cli --wait
   ```
 
 - Use the Temporal CLI to observe workflow execution (requires `temporal` CLI):
