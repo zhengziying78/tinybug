@@ -11,9 +11,8 @@ testing MVP.
 - `temporal/github/`: GitHub-facing helpers (check processing, repo and PR
   management, test analysis) shared by activities and future services.
 
-The legacy modules under `scripts/demo/workflow/` and `scripts/demo/github/` have
-been retained only as thin wrappers for backward compatibility with the demo CLI.
-New code should import directly from the `temporal.*` packages.
+Legacy demo-only helpers now live exclusively under `scripts/demo/workflow/flow.py`
+for the console experience; all reusable code resides in the `temporal.*` packages.
 
 ## Tech Stack
 

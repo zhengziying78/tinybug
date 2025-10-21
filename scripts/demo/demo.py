@@ -6,7 +6,7 @@ Usage: python demo.py [repo_name]
 """
 import sys
 from scripts.demo.workflow.flow import run_single_mutation_flow
-from scripts.demo.workflow.summary import render_summary_lines
+from temporal.workflows.summary import render_summary_lines
 from scripts.demo.known_repos import DEFAULT_REPO_NAME, KNOWN_REPOS, repo_menu_entries
 
 
