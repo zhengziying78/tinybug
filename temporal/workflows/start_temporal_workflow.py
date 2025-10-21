@@ -25,6 +25,7 @@ from temporal.workflows.summary import render_summary_lines
 async def start_workflow(
     *,
     repo_name: str,
+    mutation_id: Optional[str],
     task_queue: str,
     namespace: str,
     address: str,
@@ -40,17 +41,13 @@ async def start_workflow(
         available = ", ".join(sorted(KNOWN_REPOS.keys()))
         raise ValueError(f"Unknown repository '{repo_name}'. Options: {available}")
 
-    mutation_config = get_mutation(repo_name)
-    if not mutation_config:
-        available = ", ".join(sorted(KNOWN_REPOS.keys()))
-        raise ValueError(
-            f"No mutation configured for repository '{repo_name}'. Options: {available}"
-        )
+    mutation_config = get_mutation(repo_name, mutation_id)
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     mutation_metadata = generate_mutation_metadata(mutation_config, timestamp=timestamp)
 
     params = MutationWorkflowParams(
         repo_config=repo_config,
+        mutation_id=mutation_config.get("id"),
         timeout_seconds=timeout_seconds,
         output_dir=output_dir,
         base_clone_dir=base_clone_dir,
@@ -112,6 +109,10 @@ def parse_args() -> argparse.Namespace:
         help="Demo repository name",
     )
     parser.add_argument(
+        "--mutation",
+        help="Optional mutation id to execute",
+    )
+    parser.add_argument(
         "--task-queue",
         default="mutation-demo-task-queue",
         help="Temporal task queue",
@@ -157,6 +158,7 @@ async def main() -> None:
     args = parse_args()
     await start_workflow(
         repo_name=args.repo,
+        mutation_id=args.mutation,
         task_queue=args.task_queue,
         namespace=args.namespace,
         address=args.address,

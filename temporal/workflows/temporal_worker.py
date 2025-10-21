@@ -112,6 +112,7 @@ class MutationWorkflowParams:
     """Parameters supplied when starting the Temporal workflow."""
 
     repo_config: Mapping[str, Any]
+    mutation_id: Optional[str] = None
     timeout_seconds: int = 600
     output_dir: Optional[str] = None
     base_clone_dir: Optional[str] = None
@@ -224,11 +225,7 @@ class RunSingleMutationWorkflow:
     @workflow.run
     async def run(self, params: MutationWorkflowParams) -> MutationFlowResult:
         repo_config = params.repo_config
-        mutation_config = get_mutation(repo_config["name"])
-        if not mutation_config:
-            raise ValueError(
-                f"No mutation configured for repository {repo_config['name']}"
-            )
+        mutation_config = get_mutation(repo_config["name"], params.mutation_id)
         repo_id = repo_config.get("repo_id")
 
         # Generate branch and PR metadata deterministically
