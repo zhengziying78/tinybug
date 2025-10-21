@@ -12,12 +12,9 @@ from temporalio.client import Client
 
 from temporal.github.known_repos import KNOWN_REPOS
 from temporal.mutation.mutations import get_mutation
-from temporal.workflows.mutation_flow import (
-    MutationContext,
-    MutationFlowResult,
-    MutationResult,
-    generate_mutation_metadata,
-)
+from models.mutation.context import MutationContext
+from models.mutation.result import MutationResult
+from temporal.workflows.mutation_flow import MutationFlowResult, generate_mutation_metadata
 from temporal.workflows.temporal_worker import (
     MutationWorkflowParams,
     RunSingleMutationWorkflow,

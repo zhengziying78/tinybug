@@ -17,12 +17,9 @@ from temporal.workflows.activities import (
     create_pull_request,
     wait_for_checks,
 )
-from temporal.workflows.mutation_flow import (
-    MutationContext,
-    MutationFlowResult,
-    MutationResult,
-    generate_mutation_metadata,
-)
+from models.mutation.context import MutationContext
+from models.mutation.result import MutationResult
+from temporal.workflows.mutation_flow import MutationFlowResult, generate_mutation_metadata
 from temporal.workflows.storage import persist_flow_result
 from temporal.workflows.summary import render_summary_lines
 from temporal.mutation.mutations import get_mutation

@@ -7,6 +7,9 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any, Dict, Mapping, Optional
 
+from models.mutation.context import MutationContext
+from models.mutation.result import MutationResult
+
 
 def build_pr_body(mutation_config: Mapping[str, Any]) -> str:
     """Construct the pull request body for a mutation."""
@@ -38,36 +41,6 @@ def generate_mutation_metadata(
         "pr_title": pr_title,
         "pr_body": pr_body,
     }
-
-
-@dataclass(frozen=True)
-class MutationContext:
-    """Static context describing the mutation run."""
-
-    repo_url: str
-    branch_name: str
-    pr_title: str
-    mutation_description: str
-    pr_number: Optional[str] = None
-    pr_url: Optional[str] = None
-    repo_id: Optional[str] = None
-    base_branch: Optional[str] = None
-    timestamp: Optional[str] = None
-
-
-@dataclass
-class MutationResult:
-    """Outcome of executing the mutation run."""
-
-    pr_number: Optional[str] = None
-    pr_url: Optional[str] = None
-    mutation_applied: bool = False
-    analysis: Optional[Dict[str, Any]] = None
-    results_file: Optional[str] = None
-    summary_file: Optional[str] = None
-    pr_results: Optional[Dict[str, Any]] = None
-    error: Optional[str] = None
-    traceback: Optional[str] = None
 
 
 @dataclass
